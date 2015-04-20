@@ -32,7 +32,7 @@ public class Global extends Application {
      *
      * Description:  Returns a db global variable
      * usage:        In any activity of the project:
-     *                DatabaseConfig db = ((MyApplication) this.getApplication()).getDatabaseContext();
+     *                DatabaseConfig db = ((Global) this.getApplication()).getDatabaseContext();
      * @return        the database as a global variable
      * @see           com.group_seven.csc413.finalprojectrepository.DatabaseConfig
      */
