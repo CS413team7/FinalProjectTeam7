@@ -4,4 +4,3 @@ Jose Ortiz Costa
 Rafael Barrera
 Hamoon Pourtahmasbi
 Nicholas Hoffman
-Steven Lum
