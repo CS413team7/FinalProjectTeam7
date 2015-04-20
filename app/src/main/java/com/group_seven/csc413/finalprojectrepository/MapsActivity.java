@@ -1,16 +1,30 @@
 package com.group_seven.csc413.finalprojectrepository;
 
+import android.content.Context;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends FragmentActivity {
+
+
+public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLongClickListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
+    private LocationManager locationManager;
+    private String provider, result;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +62,31 @@ public class MapsActivity extends FragmentActivity {
                     .getMap();
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
-                setUpMap();
+                mMap.setMyLocationEnabled(true); //Enable Location Button
+                mMap.getUiSettings().setZoomControlsEnabled(true); //Enable Zoom Button
+
+                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+                //Create a criteria object to retrieve provider
+                Criteria criteria = new Criteria();
+
+                //Get the name of the best provider
+                provider = locationManager.getBestProvider(criteria, true);
+
+                //Get current location
+                Location myLocation = locationManager.getLastKnownLocation(provider);
+                //Avoid error when GPS OFF
+                if(myLocation != null) {
+                LatLng currentLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+                CameraPosition cameraPosition = new CameraPosition.Builder()
+                        .target(currentLocation)
+                        .zoom(14).build();
+
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    mMap.addMarker(new MarkerOptions().position(currentLocation));
+                }
+                mMap.setOnMapLongClickListener(this);
+                //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker").draggable(true).flat(true));
             }
         }
     }
@@ -59,7 +97,28 @@ public class MapsActivity extends FragmentActivity {
      * <p/>
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
-    private void setUpMap() {
+    private void setUpMap(){
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        mMap.addMarker(new MarkerOptions()
+                .position(latLng));
+    //} public void download(View view){
+        String lat =  String.valueOf(latLng.latitude);
+        String lon = String.valueOf(latLng.longitude);
+
+        String url = "http://api.sfpark.org/sfpark/rest/availabilityservice?lat=" + lat + "&long=" + lon + "&radius=0.25&uom=mile&response=XML";
+
+        AsyncTask task = new HTTP_request(this).execute(url);
+
+        try {
+            result = task.get().toString();
+        } catch (Exception e) { e.printStackTrace(); }
+
+        Log.d("mytag", result);
+        //this.result((String)result);
+        //new DownloadWebPage(this, data).execute(url);
     }
 }
