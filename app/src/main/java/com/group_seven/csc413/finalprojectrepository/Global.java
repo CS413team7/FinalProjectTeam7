@@ -1,5 +1,8 @@
 package com.group_seven.csc413.finalprojectrepository;
 import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
+
 /**
  *  Author:       Jose Ortiz
  *  File:         Global.java
@@ -38,5 +41,26 @@ public class Global extends Application {
      */
     public DatabaseConfig getDatabaseContext() {
         return databaseContext;
+    }
+
+    /**
+     * Description:  This method starts the activity that contains the
+     *               class given as a parameter from the given context
+     *
+     * @param c      Context from where the target class is called
+     *               eg. if your activity is called myActivity, you
+     *               should put in the c parameter this.getBaseContext();
+     *               if you put just this, it creates memory leaks
+     * @param target Class linked to the activity to be called
+     *               eg. If your java file linked to your activity
+     *               is myJavaFile.java, you must put in target,
+     *               myJavaFile.class
+     *
+     *
+     */
+    public static void startActivity (Context c, Class target)
+    {
+        Intent i = new Intent (c, target);
+        c.startActivity(i);
     }
 } // ends
