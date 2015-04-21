@@ -2,6 +2,8 @@ package com.group_seven.csc413.finalprojectrepository;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
+import android.widget.Toast;
+import android.view.Gravity;
 
 /**
  *  Author:       Jose Ortiz
@@ -62,5 +64,28 @@ public class Global extends Application {
     {
         Intent i = new Intent (c, target);
         c.startActivity(i);
+    }
+
+    /**
+     * Description: Creates a toast message to be accessible from all the
+     *              activities of this application
+     * @param c     Context creating the toast message
+     * @param message  Message to display
+     * @param duration Duration until the toast is gone
+     * @param horizontalGravityPosition horizontal position eg. top or bottom
+     * @param verticalGravityPosition vertical position eg. right or left
+     * Example: Suppose that you are in a activity called myActivity
+     *          Then, this is an example how to call this method from
+     *          that activity
+     *          Global.toastMessage(this, "Toast showing now", Toast.LENGTH_SHORT,
+     *                              Gravity.Top, Gravity.left);
+     */
+    public static void toastMessage(Context c, String message, int duration,
+                                          int horizontalGravityPosition, int verticalGravityPosition)
+    {
+        Toast toast = Toast.makeText(c.getApplicationContext(), message,
+                duration);
+        toast.setGravity(horizontalGravityPosition|verticalGravityPosition, 0, 0);
+        toast.show();
     }
 } // ends
