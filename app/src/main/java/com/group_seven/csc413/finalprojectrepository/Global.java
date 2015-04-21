@@ -78,7 +78,7 @@ public class Global extends Application {
      *          Then, this is an example how to call this method from
      *          that activity
      *          Global.toastMessage(this, "Toast showing now", Toast.LENGTH_SHORT,
-     *                              Gravity.Top, Gravity.left);
+     *                              Gravity.BOTTOM, Gravity.LEFT);
      */
     public static void toastMessage(Context c, String message, int duration,
                                           int horizontalGravityPosition, int verticalGravityPosition)
