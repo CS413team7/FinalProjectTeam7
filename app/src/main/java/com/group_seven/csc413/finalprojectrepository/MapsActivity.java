@@ -4,12 +4,19 @@ import android.app.Activity;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.content.Context;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.util.Log;
+import android.view.View;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -37,22 +44,6 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
-
-        etResponse = (EditText) findViewById(R.id.etResponse);
-        tvIsConnected = (TextView) findViewById(R.id.tvIsConnected);
-
-
-        // check if you are connected or not
-        if(isConnected()){
-            tvIsConnected.setBackgroundColor(0xFF00CC00);
-            tvIsConnected.setText("You are conncted");
-        }
-        else{
-            tvIsConnected.setText("You are NOT conncted");
-        }
-
-        // call AsynTask to perform network operation on separate thread
-        new HttpAsyncTask().execute("http://api.sfpark.org/sfparkTestData.json");
     }
 
     @Override
@@ -160,5 +151,26 @@ public class MapsActivity extends FragmentActivity {
             Toast.makeText(getBaseContext(), "Received!", Toast.LENGTH_LONG).show();
             etResponse.setText(result);
         }
+    }
+
+    @Override
+    public void onMapLongClick(LatLng latLng) {
+        mMap.addMarker(new MarkerOptions()
+                .position(latLng));
+    //} public void download(View view){
+        String lat =  String.valueOf(latLng.latitude);
+        String lon = String.valueOf(latLng.longitude);
+
+        String url = "http://api.sfpark.org/sfpark/rest/availabilityservice?lat=" + lat + "&long=" + lon + "&radius=0.25&uom=mile&response=XML";
+
+        AsyncTask task = new HTTP_request(this).execute(url);
+
+        try {
+            result = task.get().toString();
+        } catch (Exception e) { e.printStackTrace(); }
+
+        Log.d("mytag", result);
+        //this.result((String)result);
+        //new DownloadWebPage(this, data).execute(url);
     }
 }
