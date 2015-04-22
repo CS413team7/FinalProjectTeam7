@@ -43,10 +43,7 @@ public class MapsActivity extends FragmentActivity {
         // Loads database if exist. Otherwise, database is created
         ((Global) this.getApplication()).setDatabaseContext(DatabaseConfig.loadDbConfiguration(this));
         DatabaseConfig db = ((Global) this.getApplication()).getDatabaseContext();
-        if (db.isDatabaseOk())
-            Log.d ("Check DB: ", "Database Integrity is Ok");
-        else
-            Log.d ("Check DB: ", "Database has errors");
+
         etResponse = (EditText) findViewById(R.id.etResponse);
         tvIsConnected = (TextView) findViewById(R.id.tvIsConnected);
 
@@ -62,6 +59,31 @@ public class MapsActivity extends FragmentActivity {
 
         // call AsynTask to perform network operation on separate thread
         new HttpAsyncTask().execute("http://api.sfpark.org/sfparkTestData.json");
+        /*
+             Database testing code
+             If you want to see the database log
+             results in log tag, just type the tag on
+             the search box
+             For example: typing LocationFromDb:
+             will return the location extracted from the
+             database
+             Just for debug
+         */
+        // Checks database Integrity
+       if (db.isDatabaseOk())
+            Log.d ("Check DB: ", "Database Integrity is Ok");
+       else
+            Log.d ("Check DB: ", "Database has errors");
+       // Insert a location in the database
+       long itemsInserted = db.addParkingLocationToDB("testing Location", "189 Justin Drive San Francisco CA 94112");
+       // Log the items inserted
+       Log.d("Items: ", Long.toString(itemsInserted));
+       // Gets the location inserted from the database
+       String location = db.getParkingLocationFromDB("testing Location");
+       // Log the results
+       Log.d("LocationFromDb: ", location);
+
+
     }
 
     @Override

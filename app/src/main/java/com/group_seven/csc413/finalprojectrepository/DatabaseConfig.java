@@ -1,12 +1,10 @@
 package com.group_seven.csc413.finalprojectrepository;
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteCursor;
 import android.util.Log;
-import android.view.Gravity;
-import android.widget.Toast;
-
+import android.database.Cursor;
 /**
  * Created by Jose Ortiz Costa on 4/18/15.
  * Just a base class to start working on the database
@@ -24,6 +22,7 @@ public class DatabaseConfig
     private static final String APP_STATUS = "appStatus";
     private static final String USER_LOCATION_COLUMN = "userLocation";
     private static final String CAR_PARKED_COLUMN = "parkingLocation";
+    private static final String USERNAME_COLUMN = "username";
     private long itemsInserted;
 
     /**
@@ -72,7 +71,8 @@ public class DatabaseConfig
             db.execSQL("CREATE TABLE IF NOT EXISTS " +
                     MAPS_DATA_TABLE +
                     " ( id integer primary key autoincrement, " +
-                    USER_LOCATION_COLUMN + " Text," +
+                    USERNAME_COLUMN + " Text, " +
+                    USER_LOCATION_COLUMN + " Text, " +
                     CAR_PARKED_COLUMN + " Text)");
 
 
@@ -108,4 +108,34 @@ public class DatabaseConfig
     {
         return db.isDatabaseIntegrityOk();
     }
+
+    public long addParkingLocationToDB (String username, String location)
+    {
+
+        try
+        {
+            ContentValues cv = new ContentValues();
+            cv.put(USERNAME_COLUMN, username);
+            cv.put(USER_LOCATION_COLUMN, location);
+            itemsInserted = db.insert(MAPS_DATA_TABLE, null, cv);
+            return itemsInserted;
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+        return itemsInserted;
+    }
+
+    public String  getParkingLocationFromDB(String username)
+    {
+        String location = null;
+        Cursor c = db.rawQuery("SELECT " + USER_LOCATION_COLUMN + " FROM " + MAPS_DATA_TABLE +
+                               " WHERE " + USERNAME_COLUMN + " = ? ", new String[]{username});
+        if (c.moveToFirst())
+            location = c.getString(c.getColumnIndex(USER_LOCATION_COLUMN));
+        return location;
+    }
+
+
 }
