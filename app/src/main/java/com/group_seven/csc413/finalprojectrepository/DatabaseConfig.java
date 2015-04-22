@@ -75,13 +75,12 @@ public class DatabaseConfig
                     USER_LOCATION_COLUMN + " Text," +
                     CAR_PARKED_COLUMN + " Text)");
 
-            if (db.isDatabaseIntegrityOk())
-                Log.d("LoadDatabaseConfiguration", "Database Integrity Ok");
+
         }
         catch (SQLException e)
         {
             // Error database couldn't be created or loaded
-            Log.d("LoadDatabaseConfiguration ", "Error while creating " + DATABASE_NAME +
+            Log.d("DbConfiguration: ", "Error while creating " + DATABASE_NAME +
                   " Detailed error: " + e.getMessage());
         }
     }
@@ -91,12 +90,22 @@ public class DatabaseConfig
         try
         {
             if (context.deleteDatabase(databaseName))
-               Log.d("In deleteDatabase method: ", "database deleted");
+               Log.d("DbConfiguration: ", "database deleted");
         }
         catch (SQLException e)
         {
-            Log.d("In deleteDatabase method: ", "Error deleting " +
+            Log.d("DbConfiguration: ", "Error deleting " +
                   databaseName + ". Detailed Error: "  + e.getMessage());
         }
+    }
+
+    /**
+     * Description: Checks database integrity
+     * @return true if the database integrity is ok.
+     *         Otherwise, returns false.
+     */
+    public boolean isDatabaseOk ()
+    {
+        return db.isDatabaseIntegrityOk();
     }
 }

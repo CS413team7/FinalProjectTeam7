@@ -43,6 +43,10 @@ public class MapsActivity extends FragmentActivity {
         // Loads database if exist. Otherwise, database is created
         ((Global) this.getApplication()).setDatabaseContext(DatabaseConfig.loadDbConfiguration(this));
         DatabaseConfig db = ((Global) this.getApplication()).getDatabaseContext();
+        if (db.isDatabaseOk())
+            Log.d ("Check DB: ", "Database Integrity is Ok");
+        else
+            Log.d ("Check DB: ", "Database has errors");
         etResponse = (EditText) findViewById(R.id.etResponse);
         tvIsConnected = (TextView) findViewById(R.id.tvIsConnected);
 
