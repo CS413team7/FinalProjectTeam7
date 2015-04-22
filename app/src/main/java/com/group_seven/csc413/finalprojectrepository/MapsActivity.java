@@ -1,8 +1,10 @@
 package com.group_seven.csc413.finalprojectrepository;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -46,10 +48,10 @@ public class MapsActivity extends FragmentActivity {
         // check if you are connected or not
         if(isConnected()){
             tvIsConnected.setBackgroundColor(0xFF00CC00);
-            tvIsConnected.setText("You are conncted");
+            tvIsConnected.setText("You are connected");
         }
         else{
-            tvIsConnected.setText("You are NOT conncted");
+            tvIsConnected.setText("You are NOT connected");
         }
 
         // call AsynTask to perform network operation on separate thread
@@ -60,6 +62,12 @@ public class MapsActivity extends FragmentActivity {
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+
+        //Inserts a search bar to search for places near San Francisco
+        Uri gmmIntentUri = Uri.parse("geo:37.7833, -122.4167?z=15");
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+        startActivity(mapIntent);
     }
 
     /**
