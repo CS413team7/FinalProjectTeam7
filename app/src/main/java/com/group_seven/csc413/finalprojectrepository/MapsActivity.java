@@ -1,42 +1,101 @@
 package com.group_seven.csc413.finalprojectrepository;
 
-import android.content.Context;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationManager;
+import android.app.Activity;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
+import android.view.Gravity;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
-public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLongClickListener {
+public class MapsActivity extends FragmentActivity {
+    EditText etResponse;
+    TextView tvIsConnected;
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private LocationManager locationManager;
-    private String provider, result;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        // Loads database if exist. Otherwise, database is created
+        ((Global) this.getApplication()).setDatabaseContext(DatabaseConfig.loadDbConfiguration(this));
+        DatabaseConfig db = ((Global) this.getApplication()).getDatabaseContext();
+
+        etResponse = (EditText) findViewById(R.id.etResponse);
+        tvIsConnected = (TextView) findViewById(R.id.tvIsConnected);
+
+
+        // check if you are connected or not
+        if(isConnected()){
+            tvIsConnected.setBackgroundColor(0xFF00CC00);
+            tvIsConnected.setText("You are connected");
+        }
+        else{
+            tvIsConnected.setText("You are NOT connected");
+        }
+
+        // call AsynTask to perform network operation on separate thread
+        new HttpAsyncTask().execute("http://api.sfpark.org/sfparkTestData.json");
+        /*
+             Database testing code
+             If you want to see the database log
+             results in log tag, just type the tag on
+             the search box
+             For example: typing LocationFromDb:
+             will return the location extracted from the
+             database
+             Just for debug
+         */
+        // Checks database Integrity
+       if (db.isDatabaseOk())
+            Log.d ("Check DB: ", "Database Integrity is Ok");
+       else
+            Log.d ("Check DB: ", "Database has errors");
+       // Insert a location in the database
+       long itemsInserted = db.addParkingLocationToDB("testing Location", "189 Justin Drive San Francisco CA 94112");
+       // Log the items inserted
+       Log.d("Items: ", Long.toString(itemsInserted));
+       // Gets the location inserted from the database
+       String location = db.getParkingLocationFromDB("testing Location");
+       // Log the results
+       Log.d("LocationFromDb: ", location);
+
+
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+
+        //Inserts a search bar to search for places near San Francisco
+        Uri gmmIntentUri = Uri.parse("geo:37.7833, -122.4167?z=15");
+        Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+        mapIntent.setPackage("com.google.android.apps.maps");
+        startActivity(mapIntent);
     }
 
     /**
@@ -62,31 +121,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
                     .getMap();
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
-                mMap.setMyLocationEnabled(true); //Enable Location Button
-                mMap.getUiSettings().setZoomControlsEnabled(true); //Enable Zoom Button
-
-                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-                //Create a criteria object to retrieve provider
-                Criteria criteria = new Criteria();
-
-                //Get the name of the best provider
-                provider = locationManager.getBestProvider(criteria, true);
-
-                //Get current location
-                Location myLocation = locationManager.getLastKnownLocation(provider);
-                //Avoid error when GPS OFF
-                if(myLocation != null) {
-                LatLng currentLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-                CameraPosition cameraPosition = new CameraPosition.Builder()
-                        .target(currentLocation)
-                        .zoom(14).build();
-
-                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                    mMap.addMarker(new MarkerOptions().position(currentLocation));
-                }
-                mMap.setOnMapLongClickListener(this);
-                //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker").draggable(true).flat(true));
+                setUpMap();
             }
         }
     }
@@ -97,28 +132,70 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
      * <p/>
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
-    private void setUpMap(){
+    private void setUpMap() {
         mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
     }
 
-    @Override
-    public void onMapLongClick(LatLng latLng) {
-        mMap.addMarker(new MarkerOptions()
-                .position(latLng));
-    //} public void download(View view){
-        String lat =  String.valueOf(latLng.latitude);
-        String lon = String.valueOf(latLng.longitude);
 
-        String url = "http://api.sfpark.org/sfpark/rest/availabilityservice?lat=" + lat + "&long=" + lon + "&radius=0.25&uom=mile&response=XML";
-
-        AsyncTask task = new HTTP_request(this).execute(url);
-
+    public static String GET(String url){
+        InputStream inputStream = null;
+        String result = "";
         try {
-            result = task.get().toString();
-        } catch (Exception e) { e.printStackTrace(); }
 
-        Log.d("mytag", result);
-        //this.result((String)result);
-        //new DownloadWebPage(this, data).execute(url);
+            // create HttpClient
+            HttpClient httpclient = new DefaultHttpClient();
+
+            // make GET request to the given URL
+            HttpResponse httpResponse = httpclient.execute(new HttpGet(url));
+
+            // receive response as inputStream
+            inputStream = httpResponse.getEntity().getContent();
+
+            // convert inputstream to string
+            if(inputStream != null)
+                result = convertInputStreamToString(inputStream);
+            else
+                result = "Did not work!";
+
+        } catch (Exception e) {
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+
+        return result;
+
+    }
+
+    private static String convertInputStreamToString(InputStream inputStream) throws IOException {
+        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
+        String line = "";
+        String result = "";
+        while((line = bufferedReader.readLine()) != null)
+            result += line;
+
+        inputStream.close();
+        return result;
+
+    }
+
+    public boolean isConnected(){
+        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Activity.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+        if (networkInfo != null && networkInfo.isConnected())
+            return true;
+        else
+            return false;
+    }
+    private class HttpAsyncTask extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... urls) {
+
+            return GET(urls[0]);
+        }
+        // onPostExecute displays the results of the AsyncTask.
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(getBaseContext(), "Received!", Toast.LENGTH_LONG).show();
+            etResponse.setText(result);
+        }
     }
 }
