@@ -26,7 +26,7 @@ public class Global extends Application {
      * Description:  Sets the app database as global for all the project
      * @param dbc     represents a object of the DatabaseConfig class
      * usage:        On the onCreate method of the launcher activity:
-     *                ((Global) this.getApplication()).setDatabaseContext(DatabaseConfig.getDatabaseConfiguration);
+     *                ((Global) this.getApplication()).setDatabaseContext(DatabaseConfig.loadDbConfiguration(this));
      * @see           com.group_seven.csc413.finalprojectrepository.DatabaseConfig
      */
     public void setDatabaseContext(DatabaseConfig dbc) {
