@@ -40,6 +40,7 @@ public class MapsActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        // Loads database if exist. Otherwise, database is created
         ((Global) this.getApplication()).setDatabaseContext(DatabaseConfig.loadDbConfiguration(this));
         DatabaseConfig db = ((Global) this.getApplication()).getDatabaseContext();
         etResponse = (EditText) findViewById(R.id.etResponse);
