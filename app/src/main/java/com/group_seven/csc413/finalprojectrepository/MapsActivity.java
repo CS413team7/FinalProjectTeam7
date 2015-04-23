@@ -9,12 +9,14 @@ import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 
@@ -24,7 +26,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private String provider, result;
-
+    private Marker mPin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,9 +85,11 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
                         .zoom(14).build();
 
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                    mMap.addMarker(new MarkerOptions().position(currentLocation));
+                    mPin = mMap.addMarker(new MarkerOptions().position(currentLocation).draggable(true));
                 }
+
                 mMap.setOnMapLongClickListener(this);
+                // setUpap is not being used, i left it there so it may be useful at some point
                 //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker").draggable(true).flat(true));
             }
         }
@@ -103,9 +107,11 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
 
     @Override
     public void onMapLongClick(LatLng latLng) {
-        mMap.addMarker(new MarkerOptions()
-                .position(latLng));
-    //} public void download(View view){
+
+        mPin.remove();
+        mPin = mMap.addMarker(new MarkerOptions().position(latLng).draggable(false));
+
+        //} public void download(View view){
         String lat =  String.valueOf(latLng.latitude);
         String lon = String.valueOf(latLng.longitude);
 
@@ -118,7 +124,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
         } catch (Exception e) { e.printStackTrace(); }
 
         Log.d("mytag", result);
-        //this.result((String)result);
-        //new DownloadWebPage(this, data).execute(url);
+        TextView t = (TextView) findViewById(R.id.textView);
+        t.setText(result);
     }
 }
