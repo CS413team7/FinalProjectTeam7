@@ -40,6 +40,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     private boolean pinExists = false;
     private boolean circleExists = false;
     private boolean isParked = false;
+    private DBConfig db;
 
     //Enum for easily marking price overlays
     public enum OverlayType {
@@ -58,8 +59,11 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         setUpMapIfNeeded();
         LatLng testStart = new LatLng(37.774933, -122.433823);
         LatLng testEnd = new LatLng(37.756933, -122.433823);
-
         drawOverlays(testStart, testEnd, OverlayType.PRICE, OverlayWeight.HIGH);
+        // Database testing
+        ((Global) this.getApplication()).setDatabaseContext(DBConfig.loadDbConfiguration(this));
+        db = ((Global) this.getApplication()).getDatabaseContext();
+        db.testingDatabaseIntegrity();
 
     }
 
