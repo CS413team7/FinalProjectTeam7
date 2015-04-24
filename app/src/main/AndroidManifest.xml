@@ -3,6 +3,8 @@
     package="com.group_seven.csc413.finalprojectrepository" >
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
@@ -26,17 +28,14 @@
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <!--
-           This line of code is causing problems because the activity .SplashScreen
-           is not on the project, so: Once the activity is added to the project,
-           uncomment this
+
         <activity android:name=".SplashScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name= "android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        -->
+
 
         <activity
             android:name=".MapsActivity"
