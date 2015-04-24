@@ -1,6 +1,7 @@
 package com.group_seven.csc413.finalprojectrepository;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -15,6 +16,8 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -27,6 +30,9 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
     private LocationManager locationManager;
     private String provider, result;
     private Marker mPin;
+    private Circle markerCircle;
+    private boolean pinExists = false;
+    private boolean circleExists = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,8 +114,23 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
     @Override
     public void onMapLongClick(LatLng latLng) {
 
-        mPin.remove();
+        if(pinExists){
+            mPin.remove();
+        } else {
+            pinExists = true;
+        }
+
+        if(circleExists){
+            markerCircle.remove();
+        } else {
+            circleExists = true;
+        }
+
         mPin = mMap.addMarker(new MarkerOptions().position(latLng).draggable(false));
+
+        CircleOptions markerRadius = new CircleOptions().center(latLng).radius(402.336).strokeWidth(5);
+        markerCircle = mMap.addCircle(markerRadius);
+
 
         //} public void download(View view){
         String lat =  String.valueOf(latLng.latitude);
