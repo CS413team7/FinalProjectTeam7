@@ -65,6 +65,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
     }
 
 
+
     /**
      * This method accpets 2 LatLng objects as arguments, and a Layer type, and layer weight.
      * The Layer type decides which type of overlay will be displayed, for example, price, or parking availability.
