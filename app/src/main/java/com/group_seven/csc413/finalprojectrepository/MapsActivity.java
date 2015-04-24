@@ -1,6 +1,7 @@
 package com.group_seven.csc413.finalprojectrepository;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -14,11 +15,14 @@ import android.widget.TextView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 
 public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLongClickListener {
@@ -28,17 +32,67 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
     private String provider, result;
     private Marker mPin;
 
+    //Enum for easily marking price overlays
+    public enum OverlayType {
+        PRICE, AVILABILITY
+    }
+
+    //Enum for showing weight of drawn path
+    public enum OverlayWeight {
+        HIGH,MEDIUM,LOW
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        LatLng testStart = new LatLng(37.774933, -122.433823);
+        LatLng testEnd = new LatLng(37.756933, -122.433823);
+
+        drawOverlays(testStart,testEnd, OverlayType.PRICE, OverlayWeight.HIGH);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+    }
+
+
+    /**
+     * This method accpets 2 LatLng objects as arguments, and a Layer type, and layer weight.
+     * The Layer type decides which type of overlay will be displayed, for example, price, or parking availability.
+     * layer weight will select a color based on a low to high selector.
+     */
+    void drawOverlays(LatLng start, LatLng stop, OverlayType layerType, OverlayWeight layerWeight ){
+        int drawColor;
+        int drawWidth;
+
+        switch (layerWeight) {
+            case HIGH:
+                drawColor = Color.RED;
+                drawWidth = 12;
+                break;
+
+            case MEDIUM:
+                drawColor = Color.YELLOW;
+                drawWidth = 11;
+                break;
+
+            default:
+                drawColor = Color.GREEN;
+                drawWidth = 10;
+                break;
+        }
+
+        PolylineOptions rectOptions = new PolylineOptions()
+                .add(start)
+                .add(stop)
+                .width(drawWidth)
+                .color(drawColor);
+
+        Polyline polyline = mMap.addPolyline(rectOptions);
     }
 
     /**
