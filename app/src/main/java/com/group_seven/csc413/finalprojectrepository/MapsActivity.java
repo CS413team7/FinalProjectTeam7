@@ -65,6 +65,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
      * The Layer type decides which type of overlay will be displayed, for example, price, or parking availability.
      * layer weight will select a color based on a low to high selector.
      */
+
     void drawOverlays(LatLng start, LatLng stop, OverlayType layerType, OverlayWeight layerWeight ){
         int drawColor;
         int drawWidth;
@@ -94,6 +95,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
 
         Polyline polyline = mMap.addPolyline(rectOptions);
     }
+
 
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
