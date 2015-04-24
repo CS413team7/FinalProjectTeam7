@@ -8,7 +8,10 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -27,7 +30,7 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 
-public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLongClickListener {
+public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLongClickListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
@@ -36,6 +39,7 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
     private Circle markerCircle;
     private boolean pinExists = false;
     private boolean circleExists = false;
+    private boolean isParked = false;
 
     //Enum for easily marking price overlays
     public enum OverlayType {
@@ -55,7 +59,8 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
         LatLng testStart = new LatLng(37.774933, -122.433823);
         LatLng testEnd = new LatLng(37.756933, -122.433823);
 
-        drawOverlays(testStart,testEnd, OverlayType.PRICE, OverlayWeight.HIGH);
+        drawOverlays(testStart, testEnd, OverlayType.PRICE, OverlayWeight.HIGH);
+
     }
 
     @Override
@@ -201,7 +206,45 @@ public class MapsActivity extends FragmentActivity implements GoogleMap.OnMapLon
         } catch (Exception e) { e.printStackTrace(); }
 
         Log.d("mytag", result);
-        TextView t = (TextView) findViewById(R.id.textView);
-        t.setText(result);
+        //TextView t = (TextView) findViewById(R.id.textView);
+        //t.setText(result);
     }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle presses on the action bar items
+        switch (item.getItemId()) {
+            case R.id.park_button:
+                if(isParked == true){
+                    unPark();
+                }else{
+                    park();
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void park(){
+        isParked = true;
+        // put all code for parking here!!!
+
+    }
+
+    public void unPark(){
+        isParked = false;
+        // put all code for returning to car here!!!
+
+    }
+
+
 }
