@@ -57,13 +57,12 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        // gets the database context
+        db = ((Global) this.getApplication()).getDatabaseContext();
         LatLng testStart = new LatLng(37.774933, -122.433823);
         LatLng testEnd = new LatLng(37.756933, -122.433823);
         drawOverlays(testStart, testEnd, OverlayType.PRICE, OverlayWeight.HIGH);
-        // Database testing
-        ((Global) this.getApplication()).setDatabaseContext(DBConfig.loadDbConfiguration(this));
-        db = ((Global) this.getApplication()).getDatabaseContext();
-        db.testingDatabaseIntegrity();
+        park();
 
     }
 
@@ -240,7 +239,20 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
     public void park(){
         isParked = true;
-        // put all code for parking here!!!
+         // put all code for parking here!!!
+         /*
+             Uncomment the lines below, and put the correct context and
+             coordinates to save parking coordinates in database.
+             Note: context parameter can be any any string you want like
+             for example myParkingSite. Context parameter is used as a
+             index to update the database if needed
+         */
+
+        // db.saveParkingCoordinates("myContext", new LatLng(37.774933, -122.433823));
+        // LatLng latlng = db.getParkingCoordinates("myContext'");
+        // db.updateParkingCoordinates("myContext", new LatLng(90.774, -180.433823))
+
+
 
     }
 

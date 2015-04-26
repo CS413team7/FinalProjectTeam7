@@ -6,6 +6,9 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.database.Cursor;
+
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.*;
 /**
  * Created by Jose Ortiz Costa on 4/18/15.
@@ -335,6 +338,124 @@ public class DBConfig
 
     /**
      *
+     * @param context
+     * @return
+     */
+    public String getUserLocation (String context)
+    {
+        String userLocation = "";
+        try
+        {
+            Cursor c = db.rawQuery("SELECT * FROM " + USER_LOC_TABLE +
+                    " WHERE " + CONTEXT_COLUMN + " = ? ", new String[]{context});
+            if (c.moveToFirst())
+                userLocation = c.getString(c.getColumnIndex(LOCATION_COLUMN));
+            c.close();
+            return userLocation;
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+
+        return "Location not found";
+    }
+
+    /**
+     * Description: Saves parking coordinates in the database
+     * @param context user context for the parking
+     * @param latlng LatLong object containing the coordinates to save
+     * @see com.google.android.gms.maps.model.LatLng class
+     */
+    public void saveParkingCoordinates (String context, LatLng latlng)
+    {
+        try
+        {
+            ContentValues cv = new ContentValues();
+            cv.put(CONTEXT_COLUMN, context);
+            cv.put(LATITUDE_COLUMN, latlng.latitude);
+            cv.put(LONGITUDE_COLUMN, latlng.longitude);
+            db.insert(CAR_LOC_TABLE, null, cv);
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+    }
+
+    /**
+     * Description: gets the coordinates of the vehicle parked
+     * @param context user context for the parking
+     * @return a LatLng object with the parking coordinates
+     */
+    public LatLng getParkingCoordinates (String context)
+    {
+        try
+        {
+            Cursor c = db.rawQuery("SELECT " + LATITUDE_COLUMN + ", " + LONGITUDE_COLUMN +
+                    " FROM " + CAR_LOC_TABLE + " WHERE " + CONTEXT_COLUMN + " =? ", new String[]{context});
+            double lat = 0, lng = 0;
+            while (c.moveToNext()) {
+                lat = c.getDouble(c.getColumnIndex(LATITUDE_COLUMN));
+                lng = c.getDouble(c.getColumnIndex(LONGITUDE_COLUMN));
+            }
+            c.close();
+            return new LatLng(lat, lng);
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+        return new LatLng(0,0);
+    }
+
+    /**
+     * Description: updates parking coordinates in a given context
+     * @param context user context for the parking
+     * @param latlng LatLong object containing the coordinates to update
+     */
+    public void updateParkingCoordinates (String context, LatLng latlng) {
+        try
+        {
+            ContentValues newValues = new ContentValues();
+            newValues.put(LATITUDE_COLUMN, latlng.latitude);
+            newValues.put(LONGITUDE_COLUMN, latlng.longitude);
+            String[] args = new String[]{context};
+            db.update(CAR_LOC_TABLE, newValues, CONTEXT_COLUMN +
+                    "=?", args);
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+    }
+
+    public long updateLocation(String userContext, boolean isParkingLocation, String location)
+    {
+        String table = "";
+        if (isParkingLocation == true)
+            table = CAR_LOC_TABLE;
+        else
+            table = USER_LOC_TABLE;
+        try
+        {
+            ContentValues cv = new ContentValues();
+            cv.put(LOCATION_COLUMN, location);
+            String[] args = new String[]{userContext};
+            // returns the number of items updated
+            return  db.update(CAR_LOC_TABLE, cv,  CONTEXT_COLUMN +
+                    "=?", args);
+
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     *
     */
     public void testingDatabaseIntegrity ()
     {
@@ -366,8 +487,7 @@ public class DBConfig
         Log.d("DBTest: ", "User Location : " + userLocationInfo.get(DBConfig.LOCATION));
     }
 
-    /*
-       Update and delete methods comming soon
-     */
+
+
 
 }

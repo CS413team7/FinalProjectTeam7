@@ -15,7 +15,7 @@ import android.view.Window;
 
 
 public class SplashScreen extends Activity {
-
+    private DBConfig db;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -23,6 +23,9 @@ public class SplashScreen extends Activity {
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.splashscreen);
+        // If database exist, load it. Otherwise creates a new one
+        ((Global) this.getApplication()).setDatabaseContext(DBConfig.loadDbConfiguration(this));
+
 
         //adding wifi manager so that it may be changed within the app if wifi is off
         WifiManager wifi;
@@ -33,6 +36,7 @@ public class SplashScreen extends Activity {
             public void run(){
                 try {
                     sleep(5000);
+
                     Intent i = new Intent(SplashScreen.this, MapsActivity.class);
                     startActivity(i);
                     finish();
