@@ -78,6 +78,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
+             Remember to comment it again, after the database is rebuilt.
          */
         // db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
 
@@ -296,18 +297,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         animateCamera(parkedLocation);
         invalidateOptionsMenu();
         drawParkedCar();
-         // put all code for parking here!!!
-         /*
-             Uncomment the lines below, and put the correct context and
-             coordinates to save parking coordinates in database.
-             Note: context parameter can be any any string you want like
-             for example myParkingSite. Context parameter is used as a
-             index to update the database if needed
-         */
 
-        // db.saveParkingCoordinates("myFirstParking", new LatLng(37.774933, -122.433823));
-        // LatLng latlng = db.getParkingCoordinates("myFirstParking");
-        // db.updateParkingCoordinates("myFirstParking", new LatLng(90.774, -180.433823))
 
     }
 
