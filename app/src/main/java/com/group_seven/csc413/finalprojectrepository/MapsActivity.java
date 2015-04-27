@@ -46,6 +46,8 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     private boolean isParked = false;
     private DBConfig db;
     private JSONObject jObject;
+    LatLng parkedLocation;
+
     JSONArray jArray;
 
     String url = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=on";
@@ -149,32 +151,44 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
                 mMap.setMyLocationEnabled(true); //Enable Location Button
                 mMap.getUiSettings().setZoomControlsEnabled(true); //Enable Zoom Button
 
-                locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                LatLng currentLocation = getCurrentLocation();
+                animateCamera(currentLocation);
 
-                //Create a criteria object to retrieve provider
-                Criteria criteria = new Criteria();
-
-                //Get the name of the best provider
-                provider = locationManager.getBestProvider(criteria, true);
-
-                //Get current location
-                Location myLocation = locationManager.getLastKnownLocation(provider);
-                //Avoid error when GPS OFF
-                if(myLocation != null) {
-                LatLng currentLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-                CameraPosition cameraPosition = new CameraPosition.Builder()
-                        .target(currentLocation)
-                        .zoom(14).build();
-
-                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                    mPin = mMap.addMarker(new MarkerOptions().position(currentLocation).draggable(true));
-                }
 
                 mMap.setOnMapLongClickListener(this);
                 // setUpap is not being used, i left it there so it may be useful at some point
                 //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker").draggable(true).flat(true));
             }
         }
+    }
+
+    void animateCamera(LatLng currentLocation){
+        CameraPosition cameraPosition = new CameraPosition.Builder()
+                .target(currentLocation)
+                .zoom(14).build();
+
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        mPin = mMap.addMarker(new MarkerOptions().position(currentLocation).draggable(true));
+    }
+
+    LatLng getCurrentLocation(){
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        //Create a criteria object to retrieve provider
+        Criteria criteria = new Criteria();
+
+        //Get the name of the best provider
+        provider = locationManager.getBestProvider(criteria, true);
+
+        //Get current location
+        Location myLocation = locationManager.getLastKnownLocation(provider);
+        //Avoid error when GPS OFF
+
+        LatLng currentLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+
+
+        return currentLocation;
+
     }
 
     /**
@@ -211,19 +225,29 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         //} public void download(View view){
         String lat =  String.valueOf(latLng.latitude);
         String lon = String.valueOf(latLng.longitude);
-
-
-
-
     }
+
+
+
 
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
+        if(isParked){
+            menu.findItem(R.id.cancel_button).setEnabled(true);
+            menu.findItem(R.id.cancel_button).setVisible(true);
+            menu.findItem(R.id.park_button).setTitle("Return");
+        }else{
+            menu.findItem(R.id.cancel_button).setEnabled(false);
+            menu.findItem(R.id.cancel_button).setVisible(false);
+            menu.findItem(R.id.park_button).setTitle("Park");
+        }
         return true;
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -236,6 +260,8 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
                     park();
                 }
                 return true;
+            case R.id.cancel_button:
+                cancel();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -243,6 +269,9 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
     public void park(){
         isParked = true;
+        parkedLocation = getCurrentLocation();
+        animateCamera(parkedLocation);
+        invalidateOptionsMenu();
          // put all code for parking here!!!
          /*
              Uncomment the lines below, and put the correct context and
@@ -256,10 +285,36 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         // LatLng latlng = db.getParkingCoordinates("myFirstParking");
         // db.updateParkingCoordinates("myFirstParking", new LatLng(90.774, -180.433823))
 
-}
+    }
+
+    //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!
+    void saveParkedLocation(LatLng parkedLocation){
+        db.saveParkingCoordinates("My Current Parked Location", parkedLocation);
+    }
+
+    LatLng loadParkedLocation(){
+        //LOAD DATABASE INFO HERE
+        return null;
+    }
+
+    //ERASE LAST PARKED LOCATION FROM DATABASE
+    void clearParkedLocation(){
+        parkedLocation = null;
+
+    }
+
+
+    void cancel(){
+        isParked = false;
+        invalidateOptionsMenu();
+        clearParkedLocation();
+
+        //This method should clear the current parked location in database and any current parked variables
+    }
 
     public void unPark(){
-        isParked = false;
+        //This method will navigate you back to your car, cancel() on the other hand will just reset the location
+        cancel();
         // put all code for returning to car here!!!
 
     }
@@ -305,6 +360,10 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
 
     }
+
+
+
+
 
 
 

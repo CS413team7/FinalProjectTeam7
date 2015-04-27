@@ -3,5 +3,7 @@
     <string name="title_activity_maps">Team7 Map</string>
     <string name="action_settings">Settings</string>
     <string name="park_button">Park</string>
+    <string name="cancel_button">Cancel</string>
+    <string name="return_button">Return</string>
 
 </resources>
