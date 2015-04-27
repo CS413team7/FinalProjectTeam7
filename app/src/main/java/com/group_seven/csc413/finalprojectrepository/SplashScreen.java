@@ -42,6 +42,7 @@ public class SplashScreen extends Activity {
         ((Global) this.getApplication()).setDatabaseContext(DBConfig.loadDbConfiguration(this));
 
 
+
         //adding wifi manager so that it may be changed within the app if wifi is off
        // WifiManager wifi;
         //wifi=(WifiManager)getSystemService(Context.WIFI_SERVICE);

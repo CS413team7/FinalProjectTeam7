@@ -5,7 +5,7 @@ package com.group_seven.csc413.finalprojectrepository;
  */
 
 //For using Jsoup you need to import Jsoup.jar file
-import org.jsoup.Jsoup;
+import org.jsoup.*;
 import org.jsoup.nodes.Document;
 
 /**

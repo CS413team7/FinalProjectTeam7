@@ -20,8 +20,8 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'app/lib')
+    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.android.support:appcompat-v7:22.0.0'
     compile 'com.google.android.gms:play-services:7.0.0'
-    compile files('app/lib/jsoup-1.8.2.jar')
+    compile files('libs/jsoup-1.8.2.jar')
 }

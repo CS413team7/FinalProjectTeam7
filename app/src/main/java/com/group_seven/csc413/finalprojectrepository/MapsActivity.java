@@ -14,7 +14,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-
+import java.util.*;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -29,10 +29,6 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 
 public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLongClickListener {
 
@@ -45,9 +41,6 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     private boolean circleExists = false;
     private boolean isParked = false;
     private DBConfig db;
-    private JSONObject jObject;
-    JSONArray jArray;
-    String url = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=on";
 
     //Enum for easily marking price overlays
     public enum OverlayType {
@@ -66,9 +59,15 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         setUpMapIfNeeded();
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
-        loadParkingInfo();
-
-
+        /*
+             Uncomment to delete database and rebuild the database at runtime
+             Warning: All the data stored before of the rebuild will be lost
+         */
+        // db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
+        LatLng testStart = new LatLng(37.774933, -122.433823);
+        LatLng testEnd = new LatLng(37.756933, -122.433823);
+        drawOverlays(testStart, testEnd, OverlayType.PRICE, OverlayWeight.HIGH);
+        park();
 
 
     }
@@ -77,52 +76,6 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
-    }
-
-    /**
-     * loadParkingInfo will call the sfpark api, then parse the incoming json data. It loops through the AVL node then separates the
-     * incoming coordinates and feeds them to the draw function. Next iteration will add functionality for price and availability marking.
-     */
-
-    void loadParkingInfo(){
-        String tempCoordinates;
-        String[] coordinates;
-        AsyncTask task = new HTTP_request(this).execute(url);
-
-        try {
-            result = task.get().toString();
-        } catch (Exception e) { e.printStackTrace(); }
-        try {
-            jObject = new JSONObject(result);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            jArray = jObject.getJSONArray("AVL");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        for (int i=0; i < jArray.length(); i++)
-        {
-            try {
-                JSONObject oneObject = jArray.getJSONObject(i);
-                // Pulling items from the array
-                tempCoordinates = oneObject.getString("LOC");
-                coordinates = tempCoordinates.split(",");
-                LatLng startCoordinate = new LatLng(Double.parseDouble(coordinates[1]), Double.parseDouble(coordinates[0]));
-                LatLng endCoordinate = new LatLng(Double.parseDouble(coordinates[3]), Double.parseDouble(coordinates[2]));
-                drawOverlays(startCoordinate, endCoordinate, OverlayType.PRICE, OverlayWeight.LOW);
-
-
-
-
-            } catch (JSONException e) {
-                // Oops
-            }
-        }
-
-
     }
 
 
@@ -253,14 +206,15 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         String lat =  String.valueOf(latLng.latitude);
         String lon = String.valueOf(latLng.longitude);
 
+        String url = "http://api.sfpark.org/sfpark/rest/availabilityservice?lat=" + lat + "&long=" + lon + "&radius=0.25&uom=mile&response=XML";
 
+        AsyncTask task = new HTTP_request(this).execute(url);
 
+        try {
+            result = task.get().toString();
+        } catch (Exception e) { e.printStackTrace(); }
 
-
-
-
-        //Log.d("mytag", result);
-
+        Log.d("mytag", result);
         //TextView t = (TextView) findViewById(R.id.textView);
         //t.setText(result);
     }
@@ -300,13 +254,11 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
              index to update the database if needed
          */
 
-        // db.saveParkingCoordinates("myContext", new LatLng(37.774933, -122.433823));
-        // LatLng latlng = db.getParkingCoordinates("myContext'");
-        // db.updateParkingCoordinates("myContext", new LatLng(90.774, -180.433823))
+        // db.saveParkingCoordinates("myFirstParking", new LatLng(37.774933, -122.433823));
+        // LatLng latlng = db.getParkingCoordinates("myFirstParking");
+        // db.updateParkingCoordinates("myFirstParking", new LatLng(90.774, -180.433823))
 
-
-
-    }
+}
 
     public void unPark(){
         isParked = false;
