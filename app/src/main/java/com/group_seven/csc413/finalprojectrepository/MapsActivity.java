@@ -50,6 +50,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     private JSONObject jObject;
     LatLng parkedLocation;
     Date timeParked;
+    Marker currentParkedMarker;
 
     JSONArray jArray;
 
@@ -231,6 +232,22 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     }
 
 
+    public void drawParkedCar() {
+
+
+        currentParkedMarker = mMap.addMarker(new MarkerOptions()
+                .position(parkedLocation)
+                .draggable(false)
+                .title("Here's my Car!")
+        .icon(BitmapDescriptorFactory.fromResource(R.drawable.red_little_car))
+        );
+
+        currentParkedMarker.showInfoWindow();
+    }
+
+    void removeParkedCar(){
+        currentParkedMarker.remove();
+    }
 
 
 
@@ -276,6 +293,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         timeParked = new Date();
         animateCamera(parkedLocation);
         invalidateOptionsMenu();
+        drawParkedCar();
          // put all code for parking here!!!
          /*
              Uncomment the lines below, and put the correct context and
@@ -314,6 +332,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         invalidateOptionsMenu();
         clearParkedLocation();
         timeParked = null;
+        removeParkedCar();
 
         //This method should clear the current parked location in database and any current parked variables
     }
