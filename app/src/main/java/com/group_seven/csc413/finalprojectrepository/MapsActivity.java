@@ -14,6 +14,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+
+import java.security.Timestamp;
 import java.util.*;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -47,6 +49,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     private DBConfig db;
     private JSONObject jObject;
     LatLng parkedLocation;
+    Date timeParked;
 
     JSONArray jArray;
 
@@ -270,6 +273,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     public void park(){
         isParked = true;
         parkedLocation = getCurrentLocation();
+        timeParked = new Date();
         animateCamera(parkedLocation);
         invalidateOptionsMenu();
          // put all code for parking here!!!
@@ -288,7 +292,8 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     }
 
     //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!
-    void saveParkedLocation(LatLng parkedLocation){
+    void saveParkedLocation(){
+        // also save timeParked;
         db.saveParkingCoordinates("My Current Parked Location", parkedLocation);
     }
 
@@ -308,6 +313,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         isParked = false;
         invalidateOptionsMenu();
         clearParkedLocation();
+        timeParked = null;
 
         //This method should clear the current parked location in database and any current parked variables
     }
