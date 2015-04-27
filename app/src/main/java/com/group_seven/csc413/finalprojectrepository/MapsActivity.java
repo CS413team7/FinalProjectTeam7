@@ -48,6 +48,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     private boolean isParked = false;
     private DBConfig db;
     private JSONObject jObject;
+    LatLng lastParkedLocation;
     LatLng parkedLocation;
     Date timeParked;
     Marker currentParkedMarker;
@@ -73,6 +74,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         setUpMapIfNeeded();
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
+        lastParkedLocation = loadParkedLocation();
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
@@ -312,11 +314,22 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!
     void saveParkedLocation(){
         // also save timeParked;
-        db.saveParkingCoordinates("My Current Parked Location", parkedLocation);
+        if (db.getProfilesCount() == 0)
+            db.saveParkingCoordinates("My Current Parked Location", parkedLocation);
+        else
+            db.updateParkingCoordinates("My Current Parked Location", parkedLocation);
     }
-
+    void addLocationToFavorites (LatLng location)
+    {
+        // working on this method
+        // db.putInFavorites(location)
+    }
     LatLng loadParkedLocation(){
-        //LOAD DATABASE INFO HERE
+        // returns the last parking location.
+        // it returns null the first time the app runs
+        // because there is not parking location saved yet
+        if (db.getProfilesCount() > 0)
+           return db.getParkingCoordinates("My Current Parked Location");
         return null;
     }
 

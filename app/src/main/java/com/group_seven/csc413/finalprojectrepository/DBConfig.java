@@ -19,27 +19,24 @@ public class DBConfig
 {
     private Context context;
     private SQLiteDatabase db;
+    private String userContext;
     private static final String DATABASE_NAME = "appDatabase.db";
     private static final String APP_INFO_TABLE = "appInfo";
-    private static final String USER_LOC_TABLE = "user";
     private static final String CAR_LOC_TABLE = "car";
     private static final String APP_NAME_COLUMN = "appName";
     private static final String APP_VERSION_COLUMN = "appVersion";
     private static final String APP_STATUS = "appStatus";
-    private static final String LOCATION_COLUMN = "Location";
     private static final String CONTEXT_COLUMN = "context";
     private static final String LATITUDE_COLUMN = "latitude";
     private static final String LONGITUDE_COLUMN = "longitude";
+    private static final String APP_TIMES_LAUNCHED = "appTimesLaunched";
+    private static final String LATITUDE_TO_STRING_COLUMN = "latitudeToString";
+    private static final String LONGITUDE_TO_STRING_COLUMN = "longitudeToString";
     private static final String TIME_COLUMN = "time";
     private static final String DIST_FROM_COLUMN = "distanceFrom";
     private static final String IS_CAR_PARKED_COLUMN = "isCarParked";
-    public static final int LOCATION = 0;
-    public static final int LONGITUDE = 1;
-    public static final int LATITUDE = 2;
-    public static final int DISTANCE_FROM_OTHER_LOCATION = 3;
-    public static final int TIME = 4;
-    public static final int IS_CAR_PARKED = 5;
-    private long itemsInserted;
+    private static final String FAVORITES_COLUMN = "favorites";
+
     /**
      * Author: Jose Ortiz
      * Description: Private constructor only can be invoked
@@ -49,7 +46,6 @@ public class DBConfig
     private DBConfig (Context c)
     {
         this.context = c.getApplicationContext();
-        itemsInserted = 0;
         loadDatabaseConfig();
     }
 
@@ -82,28 +78,25 @@ public class DBConfig
                     " ( id integer primary key autoincrement, " +
                     APP_NAME_COLUMN + " Text," +
                     APP_VERSION_COLUMN + " Text, " +
-                    APP_STATUS + " integer) ");
-            // User Location  data table
-            db.execSQL("CREATE TABLE IF NOT EXISTS " +
-                    USER_LOC_TABLE +
-                    " ( id integer primary key autoincrement, " +
-                    CONTEXT_COLUMN + " Text, " +
-                    LOCATION_COLUMN + " Text, " +
-                    LATITUDE_COLUMN + " Real, " +
-                    LONGITUDE_COLUMN + " Real, " +
-                    DIST_FROM_COLUMN + " Real, " +
-                    TIME_COLUMN + " Text )");
+                    APP_STATUS + " INTEGER, " +
+                    APP_TIMES_LAUNCHED + " INTEGER DEFAULT 0); ");
+
             // Car Location
             db.execSQL("CREATE TABLE IF NOT EXISTS " +
                     CAR_LOC_TABLE +
                     " ( id integer primary key autoincrement, " +
                     CONTEXT_COLUMN + " Text, " +
-                    LOCATION_COLUMN + " Text, " +
                     LATITUDE_COLUMN + " Real, " +
                     LONGITUDE_COLUMN + " Real, " +
+                    LATITUDE_TO_STRING_COLUMN + " Text, " +
+                    LONGITUDE_TO_STRING_COLUMN + " Text, " +
                     DIST_FROM_COLUMN + " Real, " +
                     TIME_COLUMN + " Text, " +
-                    IS_CAR_PARKED_COLUMN + " Integer )");
+                    IS_CAR_PARKED_COLUMN + " INTEGER DEFAULT 0 );");
+            if (getProfilesCount() == 0 )
+            {
+                saveParkingCoordinates("Default", new LatLng(0,0));
+            }
 
         }
         catch (SQLException e)
@@ -112,6 +105,25 @@ public class DBConfig
             Log.d("DbConfiguration: ", "Error while creating " + DATABASE_NAME +
                     " Detailed error: " + e.getMessage());
         }
+    }
+
+    public void setUserContext (String context)
+    {
+        this.userContext = context;
+    }
+
+    public String getUserContext ()
+    {
+        return userContext;
+    }
+
+    public int getProfilesCount()
+    {
+        String countQuery = "SELECT  * FROM " + CAR_LOC_TABLE;
+        Cursor cursor = db.rawQuery(countQuery, null);
+        int cnt = cursor.getCount();
+        cursor.close();
+        return cnt;
     }
 
     /**
@@ -132,6 +144,8 @@ public class DBConfig
         }
     }
 
+
+
     /**
      * Description: Checks database integrity
      * @return true if the database integrity is ok.
@@ -143,222 +157,23 @@ public class DBConfig
     }
 
     /**
-     * Description: Save a parking location with its correspondent info
-     * @param context context in which the data is save ex: my_location1
-     * @param location location where the car is parked
-     * @param time time at the car was parked
-     * @param distanceFromOtherLocation distance of the car from other location
-     * @param isCarParked determines if the car is parked
-     * @return number of items inserted
+     * Description: Rebuild the whole database
+     * @param context Activity context: normally this.getBaseContext()
+     * @param database database name
+     * Note: All the data stored in the database will be deleted
      */
-    public long saveParkingLocation (String context, String location, String time, double distanceFromOtherLocation, boolean isCarParked)
+    public void reBuildDatabase (Context context, String database)
     {
-        int cp = 0;
-        if (isCarParked = true)
-            cp = 1;
-        try {
-            ContentValues cv = new ContentValues();
-            cv.put(CONTEXT_COLUMN, context);
-            cv.put(LOCATION_COLUMN, location);
-            cv.put(DIST_FROM_COLUMN, distanceFromOtherLocation);
-            cv.put(TIME_COLUMN, time);
-            cv.put(IS_CAR_PARKED_COLUMN, cp);
-            return db.insert(CAR_LOC_TABLE, null, cv);
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-        return 0;
-    }
-
-    /**
-     * Description: Saves a car parking location by latitude and longitude
-     * @param context
-     * @param latitude
-     * @param longitude
-     * @param distanceFromOtherLocation
-     * @param time
-     * @param isCarParked
-     * @return
-     */
-    public long saveParkingLocationByCoordinates (String context, float latitude, float longitude,
-                                                  String distanceFromOtherLocation, String time, boolean isCarParked)
-    {
-        int cp = 0;
-        if (isCarParked = true)
-            cp = 1;
         try
         {
-            ContentValues cv = new ContentValues();
-            cv.put(CONTEXT_COLUMN, context);
-            cv.put(LATITUDE_COLUMN, latitude);
-            cv.put(LONGITUDE_COLUMN, longitude);
-            cv.put(TIME_COLUMN, time);
-            cv.put(DIST_FROM_COLUMN, distanceFromOtherLocation);
-            cv.put(IS_CAR_PARKED_COLUMN, cp);
-            return db.insert(CAR_LOC_TABLE, null, cv);
-
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-        return 0;
-    }
-
-    /**
-     * Description gets the car parking info location
-     * @param context the context in which the info was saved: eg: my_Location1
-     * Usage: Create an ArrayList eg: ArrayList a = new ArrayList <>()
-     *        then, a = getParkingLocationInfo(your context);
-     *        to get a item for example location: a.get(DBConfig.LOCATION);
-     *        see a complete example in the method testingDatabaseIntegrity
-     * @return an Arraylist of objects containing the parking info
-     *
-     *
-    */
-    public ArrayList  getParkingLocationInFo (String context)
-    {
-        ArrayList  carParkingInfo = new ArrayList<>();
-        try
-        {
-            Cursor c = db.rawQuery("SELECT * FROM " + CAR_LOC_TABLE +
-                    " WHERE " + CONTEXT_COLUMN + " = ? ", new String[]{context});
-            while (c.moveToNext())
-            {
-                carParkingInfo.add(c.getString(c.getColumnIndex(LOCATION_COLUMN)));
-                carParkingInfo.add(c.getFloat(c.getColumnIndex(LATITUDE_COLUMN)));
-                carParkingInfo.add(c.getFloat(c.getColumnIndex(LONGITUDE_COLUMN)));
-                carParkingInfo.add(c.getFloat(c.getColumnIndex(DIST_FROM_COLUMN)));
-                carParkingInfo.add(c.getString(c.getColumnIndex(TIME_COLUMN)));
-                carParkingInfo.add(c.getInt(c.getColumnIndex(IS_CAR_PARKED_COLUMN)));
-
-
-            }
-            c.close();
-            return carParkingInfo;
+            deleteDatabase(database);
+            loadDbConfiguration(context);
         }
         catch (SQLException e)
         {
             Log.d("DbException: ", e.getMessage());
         }
 
-        return null;
-    }
-
-    /**
-     *
-     * @param context
-     * @param location
-     * @param time
-     * @param distanceFromOtherLocation
-     * @return
-     */
-    public long saveUserLocation (String context, String location, String time, double distanceFromOtherLocation)
-    {
-
-        try {
-            ContentValues cv = new ContentValues();
-            cv.put(CONTEXT_COLUMN, context);
-            cv.put(LOCATION_COLUMN, location);
-            cv.put(DIST_FROM_COLUMN, distanceFromOtherLocation);
-            cv.put(TIME_COLUMN, time);
-            return db.insert(USER_LOC_TABLE, null, cv);
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-        return 0;
-    }
-
-    /**
-     *
-     * @param context
-     * @param latitude
-     * @param longitude
-     * @param distanceFromOtherLocation
-     * @param time
-     * @return
-     */
-    public long saveUserLocationByCoordinates (String context, float latitude, float longitude,
-                                               double distanceFromOtherLocation, String time)
-    {
-
-        try
-        {
-            ContentValues cv = new ContentValues();
-            cv.put(CONTEXT_COLUMN, context);
-            cv.put(LATITUDE_COLUMN, latitude);
-            cv.put(LONGITUDE_COLUMN, longitude);
-            cv.put(TIME_COLUMN, time);
-            cv.put(DIST_FROM_COLUMN, distanceFromOtherLocation);
-            return db.insert(USER_LOC_TABLE, null, cv);
-
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-        return 0;
-    }
-
-    /**
-     *
-     * @param context
-     * @return
-     */
-    public ArrayList  getUserLocationInFo (String context)
-    {
-        ArrayList  carParkingInfo = new ArrayList<>();
-        try
-        {
-            Cursor c = db.rawQuery("SELECT * FROM " + USER_LOC_TABLE +
-                    " WHERE " + CONTEXT_COLUMN + " = ? ", new String[]{context});
-            while (c.moveToNext())
-            {
-                carParkingInfo.add(c.getString(c.getColumnIndex(LOCATION_COLUMN)));
-                carParkingInfo.add(c.getFloat(c.getColumnIndex(LATITUDE_COLUMN)));
-                carParkingInfo.add(c.getFloat(c.getColumnIndex(LONGITUDE_COLUMN)));
-                carParkingInfo.add(c.getFloat(c.getColumnIndex(DIST_FROM_COLUMN)));
-                carParkingInfo.add(c.getString(c.getColumnIndex(TIME_COLUMN)));
-
-            }
-            c.close();
-            return carParkingInfo;
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-
-        return null;
-    }
-
-    /**
-     *
-     * @param context
-     * @return
-     */
-    public String getUserLocation (String context)
-    {
-        String userLocation = "";
-        try
-        {
-            Cursor c = db.rawQuery("SELECT * FROM " + USER_LOC_TABLE +
-                    " WHERE " + CONTEXT_COLUMN + " = ? ", new String[]{context});
-            if (c.moveToFirst())
-                userLocation = c.getString(c.getColumnIndex(LOCATION_COLUMN));
-            c.close();
-            return userLocation;
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-
-        return "Location not found";
     }
 
     /**
@@ -430,62 +245,148 @@ public class DBConfig
         }
     }
 
-    public long updateLocation(String userContext, boolean isParkingLocation, String location)
+    private HashMap <String, String > prepareLatLngListToInsert ( LatLng [] latlngList)
     {
-        String table = "";
-        if (isParkingLocation == true)
-            table = CAR_LOC_TABLE;
-        else
-            table = USER_LOC_TABLE;
+         HashMap <String, String > hm = new HashMap<>();
+         String conctLat = "";
+         String concLong = "";
+         int counter = 0;
+         for (LatLng l : latlngList)
+         {
+             if (counter < latlngList.length - 1) {
+                 conctLat += String.valueOf(l.latitude) + "$";
+                 concLong += String.valueOf(l.longitude) + "$";
+             }
+             else
+                conctLat += String.valueOf(l.latitude);
+             counter ++;
+         }
+         hm.put("latitudes", conctLat);
+         hm.put("longitudes", concLong);
+         return hm;
+
+    }
+
+    public void saveMultipleParkingCoordinates (String userContext, LatLng [] latlngList)
+    {
         try
         {
+            HashMap<String, String> hm = prepareLatLngListToInsert(latlngList);
+            String latitudes = hm.get("latitudes");
+            String longitudes = hm.get("longitudes");
             ContentValues cv = new ContentValues();
-            cv.put(LOCATION_COLUMN, location);
-            String[] args = new String[]{userContext};
-            // returns the number of items updated
-            return  db.update(CAR_LOC_TABLE, cv,  CONTEXT_COLUMN +
-                    "=?", args);
-
+            cv.put(LATITUDE_TO_STRING_COLUMN, latitudes);
+            cv.put(LONGITUDE_TO_STRING_COLUMN, longitudes);
+            db.insert(CAR_LOC_TABLE, null, cv);
         }
         catch (SQLException e)
         {
             Log.d("DbException: ", e.getMessage());
         }
-        return 0;
+
+    }
+
+    public LatLng [] getMultipleParkingCoordinates (String userContext)
+    {
+        try
+        {
+
+            Cursor c = db.rawQuery("SELECT " + LATITUDE_TO_STRING_COLUMN + ", " + LONGITUDE_TO_STRING_COLUMN +
+                    " FROM " + CAR_LOC_TABLE + " WHERE " + CONTEXT_COLUMN + " =? ", new String[]{userContext});
+            String latitude = "", longitude = "";
+            while (c.moveToNext()) {
+                latitude = c.getString(c.getColumnIndex(LATITUDE_TO_STRING_COLUMN));
+                longitude = c.getString(c.getColumnIndex(LONGITUDE_TO_STRING_COLUMN));
+            }
+            String [] latitudes = latitude.split("$");
+            String [] longitudes = longitude.split("$");
+            LatLng [] ltnlng = new LatLng[latitudes.length];
+            for (int i = 0; i<latitudes.length; i++)
+            {
+
+                ltnlng[i] = new LatLng(Double.parseDouble(latitudes[i]),
+                                       Double.parseDouble(longitudes[i]));
+            }
+            return  ltnlng;
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+        return null;
+
     }
 
     /**
-     *
-    */
-    public void testingDatabaseIntegrity ()
+     * Description: Save the state of the car parking in the database
+     * @param context user context for the parking
+     * @param isParked represents the status of the car
+     * @since this method can be related to the method saveParkingCoordinates,
+     *        you should use both methods in your code
+     */
+    public void saveParkingStatus (String context, boolean isParked)
     {
-        // Test Integrity
-        if (db.isDatabaseIntegrityOk())
-            Log.d("DBTest: ", "Database Integrity OK");
-        else
-            Log.d("DBTest: ", "Database Integrity OK");
-        // Add a car parking Location
-        long locationsSavedInRow1 = saveParkingLocation("cs413test1", "97 Valencia San Francisco CA", "6:00", 34.00 ,true );
-        long locationsSavedInRow2 = saveUserLocation("cs413test2", "100 Market San Francisco CA", "2:00", 55.00 );
-        // Check items inserted
-        Log.d("DBTest: ", "Items inserted in row1: " + Long.toString(locationsSavedInRow1));
-        Log.d("DBTest: ", "Items inserted in row2: " + Long.toString(locationsSavedInRow2));
-        // Get items
-        ArrayList carLocationInfo = new ArrayList<>();
-        carLocationInfo = getParkingLocationInFo("cs413test1");
-        Log.d("DBTest: ", "Car Location: " + carLocationInfo.get(DBConfig.LOCATION));
-        Log.d("DBTest: ", "Car parked at time: " + carLocationInfo.get(DBConfig.TIME));
-        Log.d("DBTest: ", "Distance from other location : " + carLocationInfo.get(DBConfig.DISTANCE_FROM_OTHER_LOCATION));
-        boolean isCarParked = false;
-        if ((int) carLocationInfo.get(IS_CAR_PARKED) > 0)
-            isCarParked = true;
-        else
-            isCarParked = false;
-        Log.d("DBTest: ", "Is the car parked: " + isCarParked);
-        ArrayList userLocationInfo = new ArrayList<>();
-        userLocationInfo = getUserLocationInFo("cs413test2");
-        Log.d("DBTest: ", "User Location : " + userLocationInfo.get(DBConfig.LOCATION));
+        try
+        {
+            int flag = (isParked)? 1 : 0;
+            ContentValues cv = new ContentValues();
+            cv.put(CONTEXT_COLUMN, context);
+            cv.put(IS_CAR_PARKED_COLUMN, flag);
+            db.insert(CAR_LOC_TABLE, null, cv);
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
     }
+
+    /**
+     * Description: get the parking status by its context
+     * @param context user context for the parking
+     * @return if the car under this context is parked return true
+     *         Otherwise, returns false
+     */
+    public int getParkingStatus (String context)
+    {
+        Cursor c = db.rawQuery("Select " + IS_CAR_PARKED_COLUMN + " FROM " + CAR_LOC_TABLE +
+                               " Where " + CONTEXT_COLUMN + " =? ", new String[]{context});
+        int isParked = 0;
+        if (c.moveToFirst())
+            isParked =   c.getInt(c.getColumnIndex(IS_CAR_PARKED_COLUMN));
+        return isParked;
+
+        /// if (isParked == 1 )
+            // return true;
+        // return false;
+    }
+
+    /**
+     * Description: update the car parked status
+     * @param context user context for the parking
+     * @param isParked represents the status of the car
+     */
+    public void updateParkingStatus (String context, boolean isParked)
+    {
+        try
+        {
+            int flag = (isParked)? 1 : 0;
+            Log.d("DBTest ", String.valueOf(flag));
+            ContentValues cv = new ContentValues();
+            cv.put(IS_CAR_PARKED_COLUMN, flag);
+            String[] args = new String[]{context};
+            // returns the number of items updated
+            db.update(CAR_LOC_TABLE, cv,  CONTEXT_COLUMN +
+                    "=?", args);
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+    }
+
+
+
+
 
 
 
