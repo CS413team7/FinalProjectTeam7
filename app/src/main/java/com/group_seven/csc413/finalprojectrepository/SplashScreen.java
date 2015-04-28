@@ -27,9 +27,9 @@ import android.app.AlertDialog;
 
 public class SplashScreen extends Activity {
     private DBConfig db;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
 
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);

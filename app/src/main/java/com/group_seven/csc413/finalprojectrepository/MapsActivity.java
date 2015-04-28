@@ -195,7 +195,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         if (currentLocation != null)
             return currentLocation;
         else
-            return (new LatLng(37.723357, -122.480698));
+            return (new LatLng(37.723357, -122.480698)); //it fix the problem of null location but we may have to change coordinates
     }
 
     /**
