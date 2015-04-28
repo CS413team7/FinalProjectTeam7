@@ -75,6 +75,9 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
         lastParkedLocation = loadParkedLocation();
+        if (lastParkedLocation != null) {
+            park();
+        }
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
@@ -325,6 +328,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
     //ERASE LAST PARKED LOCATION FROM DATABASE
     void clearParkedLocation(){
+
         parkedLocation = null;
 
     }
