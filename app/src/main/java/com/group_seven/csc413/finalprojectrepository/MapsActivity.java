@@ -8,7 +8,6 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -43,13 +42,14 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     private boolean circleExists = false;
     private boolean isParked = false;
     private DBConfig db;
-    private JSONObject jObject;
+    private JSONObject jObjectOn;
+    private JSONObject jObjectOff;
     LatLng lastParkedLocation;
     LatLng parkedLocation;
     Date timeParked;
     Marker currentParkedMarker; //Use to draw car icon
 
-    JSONArray jArray;
+    JSONArray jArrayOn, jArrayOff;
 
     String urlOn = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=on";
     String urlOff = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=off";
@@ -352,6 +352,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     void loadParkingInfo(){
         String tempCoordinates;
         String[] coordinates;
+
         AsyncTask taskOn = new HTTP_request(this).execute(urlOn);
         AsyncTask taskOff = new HTTP_request(this).execute(urlOff);
 
@@ -361,22 +362,22 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
         } catch (Exception e) { e.printStackTrace(); }
         try {
-            jObject = new JSONObject(resultOn);
+            jObjectOn = new JSONObject(resultOn);
+            jObjectOff = new JSONObject(resultOff);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        Log.d("Hamoon", resultOff);
 
         try {
-            jArray = jObject.getJSONArray("AVL");
+            jArrayOn = jObjectOn.getJSONArray("AVL");
+            jArrayOff = jObjectOff.getJSONArray("AVL");
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        for (int i=0; i < jArray.length(); i++)
+        for (int i=0; i < jArrayOn.length(); i++)
         {
             try {
-                JSONObject oneObject = jArray.getJSONObject(i);
+                JSONObject oneObject = jArrayOn.getJSONObject(i);
                 // Pulling items from the array
                 tempCoordinates = oneObject.getString("LOC");
                 coordinates = tempCoordinates.split(",");
@@ -392,7 +393,22 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
             }
         }
 
+        for (int i=0; i < jArrayOff.length(); i++)
+        {
+            try {
+                JSONObject oneObject = jArrayOff.getJSONObject(i);
+                // Pulling items from the array
+                String temp = oneObject.getString("LOC");
+                String name = oneObject.getString("NAME");
+                String[] garageLoc = temp.split(",");
+                LatLng garage = new LatLng(Double.parseDouble(garageLoc[1]), Double.parseDouble(garageLoc[0]));
 
+                mMap.addMarker(new MarkerOptions().position(garage).title(name).draggable(true).flat(true).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+            } catch (JSONException e) {
+                // Oops
+            }
+        }
     }
 
 
