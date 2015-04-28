@@ -41,7 +41,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
     private String provider, result;
-    private Marker mPin;
+    private Marker mPin; //Single and multiple marker origin
     private Circle markerCircle;
     private boolean pinExists = false;
     private boolean circleExists = false;
@@ -51,7 +51,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     LatLng lastParkedLocation;
     LatLng parkedLocation;
     Date timeParked;
-    Marker currentParkedMarker;
+    Marker currentParkedMarker; //Use to draw car icon
 
     JSONArray jArray;
 
@@ -174,10 +174,10 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
                 .zoom(14).build();
 
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-        mPin = mMap.addMarker(new MarkerOptions().position(currentLocation).draggable(true));
+        //mPin = mMap.addMarker(new MarkerOptions().position(currentLocation).draggable(true));
     }
 
-    LatLng getCurrentLocation(){
+    LatLng getCurrentLocation() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         //Create a criteria object to retrieve provider
@@ -191,10 +191,10 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         //Avoid error when GPS OFF
 
         LatLng currentLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-
-
-        return currentLocation;
-
+        if (currentLocation != null)
+            return currentLocation;
+        else
+            return (new LatLng(37.723357, -122.480698));
     }
 
     /**
