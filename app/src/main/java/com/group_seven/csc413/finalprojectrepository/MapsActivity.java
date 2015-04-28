@@ -228,8 +228,6 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         CircleOptions markerRadius = new CircleOptions().center(latLng).radius(402.336).strokeWidth(5);
         markerCircle = mMap.addCircle(markerRadius);
 
-
-        //} public void download(View view){
         String lat =  String.valueOf(latLng.latitude);
         String lon = String.valueOf(latLng.longitude);
     }
