@@ -6,17 +6,12 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
 
-import java.security.Timestamp;
-import java.util.*;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -24,7 +19,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
-import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -35,12 +29,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
+
 
 public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLongClickListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
-    private String provider, result;
+    private String provider, resultOn, resultOff;
     private Marker mPin; //Single and multiple marker origin
     private Circle markerCircle;
     private boolean pinExists = false;
@@ -55,7 +51,9 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
     JSONArray jArray;
 
-    String url = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=on";
+    String urlOn = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=on";
+    String urlOff = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=off";
+
 
     //Enum for easily marking price overlays
     public enum OverlayType {
@@ -354,17 +352,21 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     void loadParkingInfo(){
         String tempCoordinates;
         String[] coordinates;
-        AsyncTask task = new HTTP_request(this).execute(url);
+        AsyncTask taskOn = new HTTP_request(this).execute(urlOn);
+        AsyncTask taskOff = new HTTP_request(this).execute(urlOff);
 
         try {
-            result = task.get().toString();
+            resultOn = taskOn.get().toString();
+            resultOff = taskOff.get().toString();
+
         } catch (Exception e) { e.printStackTrace(); }
         try {
-            jObject = new JSONObject(result);
+            jObject = new JSONObject(resultOn);
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
+        Log.d("Hamoon", resultOff);
 
         try {
             jArray = jObject.getJSONArray("AVL");
