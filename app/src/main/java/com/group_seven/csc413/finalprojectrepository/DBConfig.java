@@ -126,6 +126,8 @@ public class DBConfig
         return cnt;
     }
 
+
+
     /**
      * Description: Delete a database
      * @param databaseName name of the database
@@ -197,6 +199,23 @@ public class DBConfig
             Log.d("DbException: ", e.getMessage());
         }
     }
+
+
+
+    public void clearParkingCoordinates ()
+    {
+        try
+        {
+               db.delete(CAR_LOC_TABLE, "*", null);
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+    }
+
+
+
 
     /**
      * Description: gets the coordinates of the vehicle parked

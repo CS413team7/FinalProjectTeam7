@@ -72,9 +72,11 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         setUpMapIfNeeded();
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
-        lastParkedLocation = loadParkedLocation();
-        if (lastParkedLocation != null) {
-            park();
+
+
+
+        if (checkIfParked()) {
+            lastParkedLocation = loadParkedLocation();
         }
         /*
              Uncomment to delete database and rebuild the database at runtime
@@ -94,6 +96,14 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         setUpMapIfNeeded();
     }
 
+    boolean checkIfParked(){
+        //FIX NEEDED HERE! NEED TO CHECK IF CAR IS ACTUALLY PARKED
+        if(db.getProfilesCount()==1){
+           return true;
+        }else{
+            return false;
+        }
+    }
 
 
     /**
@@ -298,6 +308,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         animateCamera(parkedLocation);
         invalidateOptionsMenu();
         drawParkedCar();
+        saveParkedLocation();
 
 
     }
@@ -326,13 +337,12 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
     //ERASE LAST PARKED LOCATION FROM DATABASE
     void clearParkedLocation(){
-
-        parkedLocation = null;
-
+        db.clearParkingCoordinates();
     }
 
 
     void cancel(){
+        parkedLocation = null;
         isParked = false;
         invalidateOptionsMenu();
         clearParkedLocation();
