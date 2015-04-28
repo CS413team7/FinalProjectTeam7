@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.RelativeLayout;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -48,6 +50,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     LatLng parkedLocation;
     Date timeParked;
     Marker currentParkedMarker; //Use to draw car icon
+    RelativeLayout overlay;
 
     JSONArray jArrayOn, jArrayOff;
 
@@ -70,9 +73,11 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
+        overlay = (RelativeLayout) findViewById (R.id.overlay);
+
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
-
+        overlay.setVisibility(View.GONE);
 
 
         if (checkIfParked()) {
@@ -97,12 +102,8 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     }
 
     boolean checkIfParked(){
-        //FIX NEEDED HERE! NEED TO CHECK IF CAR IS ACTUALLY PARKED
-        if(db.getProfilesCount()==1){
-           return true;
-        }else{
-            return false;
-        }
+        //check if parked here
+        return true;
     }
 
 
@@ -308,6 +309,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         animateCamera(parkedLocation);
         invalidateOptionsMenu();
         drawParkedCar();
+        overlay.setVisibility(View.VISIBLE);
         saveParkedLocation();
 
 
@@ -347,6 +349,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         invalidateOptionsMenu();
         clearParkedLocation();
         timeParked = null;
+        overlay.setVisibility(View.GONE);
         removeParkedCar();
 
         //This method should clear the current parked location in database and any current parked variables
