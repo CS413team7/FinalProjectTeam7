@@ -5,6 +5,10 @@ package com.group_seven.csc413.finalprojectrepository;
  */
 
 //For using Jsoup you need to import Jsoup.jar file
+import android.util.Log;
+
+import com.google.android.gms.maps.model.LatLng;
+
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
 
@@ -13,12 +17,12 @@ import org.jsoup.nodes.Document;
  */
 public class FindParking {
 
-    // Double XY, Even indexes are latitude and odd indexes longitude
-    // So first point is P(XY[0], XY[1])
-    private double[] XY;
+    // It collects all parking locations
+    private LatLng[] latlng;
+    private String[] names;
 
     // number records
-    private int records;
+    private int recordsNumber;
 
     /**
      * @param data is output String from SF parking API
@@ -26,39 +30,48 @@ public class FindParking {
      */
     FindParking(String data){
 
+        Log.d("Hamoon_Cons", data);
         parsString(data);
+
     }
 
     /**
      * @param len is the number of records
-     * Set the length of XY
+     * Set the length of latlng
      */
-    private void setLengthOfXY(int len){
-        XY = new double[len];
+    private void setLength(int len){
+        latlng = new LatLng[len];
+        names = new String[len];
     }
 
     /**
      * @return the number of records
      */
-    public int getRecord (){
-        return records;
+    public int getNumOfRecord (){
+        return recordsNumber;
     }
 
     /**
      * @param rec is the number of records
      */
-    public void setRecord (int rec){
-        records = rec;
+    public void setNumOfRecord (int rec){
+        recordsNumber = rec;
     }
 
     /**
-     * @return the double[] XY to use in other classes
+     * @return the double[] latlng to use in other classes
      * other classes can call this method to have all points
      * from SF parking API
      */
-    public double[] getPoints () {
-        return XY;
+    public LatLng[] getGarageLocations () {
+        return latlng;
     }
+
+
+    public String[] getGarageName(){
+        return names;
+    }
+
 
     /**
      *
@@ -72,24 +85,21 @@ public class FindParking {
         Document html =  Jsoup.parse(data);
         rec = html.body().getElementsByTag("NUM_RECORDS").text();
         locations = html.body().getElementsByTag("LOC").text();
-        String[] locCord = locations.split(" ");
+        String[] locCord = locations.split(",");
 
-        int numOfRec = Integer.parseInt(rec);
-        setRecord(numOfRec);
-        setLengthOfXY(numOfRec);
+
+    //    Log.d("HAmoon", rec);
+      //  int numOfRec = Integer.parseInt(rec);
+     //   setNumOfRecord(numOfRec);
+        setLength(10);
 
         int i = 0;
-        int j = i + 1;
 
-        while( i < (locCord.length) - 1 & (numOfRec != 0)){
+        while( i < 10){
 
-            String[] loc = locCord[i].split(",");
+            Log.d("Hamoon", locCord[i]);
+     //       latlng[i] = new LatLng(Double.parseDouble(loc[0]), Double.parseDouble(loc[1]));
 
-            XY[i] = Double.parseDouble(loc[0]);
-            XY[j] = Double.parseDouble(loc[1]);
-
-            i = i + 2;
-            j = j + 2;
         }
     }
 }
