@@ -8,10 +8,12 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -37,6 +39,8 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
+    private LatLng currentLocation;
+    private CameraPosition cameraPosition;
     private String provider, resultOn, resultOff;
     private Marker mPin; //Single and multiple marker origin
     private Circle markerCircle;
@@ -72,27 +76,21 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        setUpMapIfNeeded();
         overlay = (RelativeLayout) findViewById (R.id.overlay);
 
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
         overlay.setVisibility(View.GONE);
 
-
-        if (checkIfParked()) {
-            lastParkedLocation = loadParkedLocation();
-        }
+        setUpMapIfNeeded();
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
              Remember to comment it again, after the database is rebuilt.
          */
-        // db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
-
-        loadParkingInfo();
-
-
+        //db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
+        setUpMapIfNeeded(); // Don't change the position of this code line
+        //loadParkingInfo();
     }
 
     @Override
@@ -170,19 +168,27 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
                 mMap.setMyLocationEnabled(true); //Enable Location Button
                 mMap.getUiSettings().setZoomControlsEnabled(true); //Enable Zoom Button
 
-                LatLng currentLocation = getCurrentLocation();
+                currentLocation = getCurrentLocation();
                 animateCamera(currentLocation);
 
+                if(db.getProfilesCount() == 2){
+                    isParked = true;
+                    lastParkedLocation =  loadParkedLocation();//db.getParkingCoordinates("My Current Parked Location");
+                    animateCamera(lastParkedLocation);
+                    invalidateOptionsMenu();
+                    drawParkedCar(lastParkedLocation);
+                    overlay.setVisibility(View.VISIBLE);
+
+                }
 
                 mMap.setOnMapLongClickListener(this);
-                // setUpap is not being used, i left it there so it may be useful at some point
-                //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker").draggable(true).flat(true));
-            }
+                // setUpMap is not being used, i left it there so it may be useful at some point
+                }
         }
     }
 
     void animateCamera(LatLng currentLocation){
-        CameraPosition cameraPosition = new CameraPosition.Builder()
+        cameraPosition = new CameraPosition.Builder()
                 .target(currentLocation)
                 .zoom(14).build();
 
@@ -202,12 +208,13 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         //Get current location
         Location myLocation = locationManager.getLastKnownLocation(provider);
         //Avoid error when GPS OFF
-
-        LatLng currentLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-        if (currentLocation != null)
+        if (myLocation != null) {
+            currentLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
             return currentLocation;
+        }
         else
-            return (new LatLng(37.723357, -122.480698)); //it fix the problem of null location but we may have to change coordinates
+           return (new LatLng(37.723357, -122.480698)); //it fix the problem of null location but we may have to change coordinates
+
     }
 
     /**
@@ -242,18 +249,30 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
         String lat =  String.valueOf(latLng.latitude);
         String lon = String.valueOf(latLng.longitude);
+
+        /**int b = db.getProfilesCount(); //This mess is mine(Rafael), ill leave just in case - ill delete it later
+        //db.saveParkingCoordinates("My Current Parked Location", new LatLng(11,22));
+        LatLng y = db.getParkingCoordinates("My Current Parked Location");
+
+        //String x = String.valueOf(y.latitude);
+        //String a = String.valueOf(parkedLocation.latitude);
+        //String y = String.valueOf(parkedLocation.longitude);
+        //x = x + ", " + a;
+        String x = "Count: " + b + "  C-Result: " +  y  + "  C-Real: "  + parkedLocation;// String.valueOf(b);
+
+
+        Log.d("mytag", x);
+        TextView t = (TextView) findViewById(R.id.textView);
+        t.setText(x);**/
     }
 
 
-    public void drawParkedCar() {
-
-
+    public void drawParkedCar(LatLng drawLocation) {
         currentParkedMarker = mMap.addMarker(new MarkerOptions()
-                .position(parkedLocation)
+                .position(drawLocation)
                 .draggable(false)
                 .title("Here's my Car!")
-        .icon(BitmapDescriptorFactory.fromResource(R.drawable.red_little_car))
-        );
+        .icon(BitmapDescriptorFactory.fromResource(R.drawable.red_little_car)));
 
         currentParkedMarker.showInfoWindow();
     }
@@ -261,8 +280,6 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     void removeParkedCar(){
         currentParkedMarker.remove();
     }
-
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -281,7 +298,6 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         return true;
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle presses on the action bar items
@@ -294,7 +310,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
                 }
                 return true;
             case R.id.cancel_button:
-                cancel();
+                unPark();
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -306,7 +322,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         timeParked = new Date();
         animateCamera(parkedLocation);
         invalidateOptionsMenu();
-        drawParkedCar();
+        drawParkedCar(parkedLocation);
         overlay.setVisibility(View.VISIBLE);
         saveParkedLocation();
 
@@ -316,28 +332,29 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!
     void saveParkedLocation(){
         // also save timeParked;
-        if (db.getProfilesCount() == 0)
+        if (db.getProfilesCount() == 1)
             db.saveParkingCoordinates("My Current Parked Location", parkedLocation);
         else
             db.updateParkingCoordinates("My Current Parked Location", parkedLocation);
     }
-    void addLocationToFavorites (LatLng location)
-    {
+    void addLocationToFavorites (LatLng location){
         // working on this method
         // db.putInFavorites(location)
     }
+
     LatLng loadParkedLocation(){
+        // May change, depending in how is being called (sure LOC is not null or otherwise)
         // returns the last parking location.
         // it returns null the first time the app runs
         // because there is not parking location saved yet
-        if (db.getProfilesCount() > 0)
+        //if (db.getProfilesCount() != 0)
            return db.getParkingCoordinates("My Current Parked Location");
-        return null;
+        //return null;
     }
 
     //ERASE LAST PARKED LOCATION FROM DATABASE
     void clearParkedLocation(){
-        db.clearParkingCoordinates();
+        db.clearParkingCoordinates("My Current Parked Location");
     }
 
 
