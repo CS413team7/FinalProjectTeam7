@@ -1,6 +1,8 @@
 package com.group_seven.csc413.finalprojectrepository;
 
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
@@ -29,6 +31,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 
 public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLongClickListener {
@@ -264,10 +268,12 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
 
     public void drawParkedCar(LatLng drawLocation) {
+
+        String address = getStreetName(drawLocation);
         currentParkedMarker = mMap.addMarker(new MarkerOptions()
                 .position(drawLocation)
                 .draggable(false)
-                .title("Here's my Car!")
+                .title(address)
         .icon(BitmapDescriptorFactory.fromResource(R.drawable.red_little_car)));
 
         currentParkedMarker.showInfoWindow();
@@ -436,7 +442,25 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         }
     }
 
+    String getStreetName(LatLng lat) {
 
+        Geocoder geocoder;
+        String address = "";
+        List<Address> addresses;
+        geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            addresses = geocoder.getFromLocation(lat.latitude, lat.latitude, 1);
+            address = addresses.get(0).getAddressLine(0);
+            String city = addresses.get(0).getAddressLine(1);
+            String country = addresses.get(0).getAddressLine(2);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return address;
+
+    }
 
 
 
