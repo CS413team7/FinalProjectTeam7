@@ -1,19 +1,15 @@
 package com.group_seven.csc413.finalprojectrepository;
 
-import android.content.Context;
 import android.graphics.Color;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -88,7 +84,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
          */
         //db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
         setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
-        //loadParkingInfo();
+        loadParkingInfo();
     }
 
     @Override
@@ -387,6 +383,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         try {
             resultOn = taskOn.get().toString();
             resultOff = taskOff.get().toString();
+          //  Log.d("Hamoon",resultOff);
 
         } catch (Exception e) { e.printStackTrace(); }
         try {
@@ -428,10 +425,10 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
                 // Pulling items from the array
                 String temp = oneObject.getString("LOC");
                 String name = oneObject.getString("NAME");
+                String address = oneObject.getString("DESC");
                 String[] garageLoc = temp.split(",");
                 LatLng garage = new LatLng(Double.parseDouble(garageLoc[1]), Double.parseDouble(garageLoc[0]));
-
-                mMap.addMarker(new MarkerOptions().position(garage).title(name).draggable(false).flat(true).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                mMap.addMarker(new MarkerOptions().position(garage).title(name + " - " + address).draggable(false).flat(true).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 
             } catch (JSONException e) {
                 // Oops
