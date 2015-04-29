@@ -93,10 +93,6 @@ public class DBConfig
                     DIST_FROM_COLUMN + " Real, " +
                     TIME_COLUMN + " Text, " +
                     IS_CAR_PARKED_COLUMN + " INTEGER DEFAULT 0 );");
-            if (getProfilesCount() == 0 )
-            {
-                saveParkingCoordinates("Default", new LatLng(0,0));
-            }
 
         }
         catch (SQLException e)
@@ -201,12 +197,15 @@ public class DBConfig
     }
 
 
-
-    public void clearParkingCoordinates ()
+    /**
+     * Description: Clear parking coordinates
+     * @param c user Context
+    */
+    public void clearParkingCoordinates (String c)
     {
         try
         {
-               db.delete(CAR_LOC_TABLE, "*", null);
+               db.delete(CAR_LOC_TABLE, CONTEXT_COLUMN + "=? ", new String []{c} );
         }
         catch (SQLException e)
         {
