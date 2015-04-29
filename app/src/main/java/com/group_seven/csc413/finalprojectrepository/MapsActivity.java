@@ -8,10 +8,12 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -79,15 +81,14 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
         overlay.setVisibility(View.GONE);
-        setUpMapIfNeeded();
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
              Remember to comment it again, after the database is rebuilt.
          */
         //db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
-        setUpMapIfNeeded(); // Don't change the position of this code line
-        loadParkingInfo();
+        setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
+        //loadParkingInfo();
     }
 
     @Override
@@ -165,6 +166,8 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
                 mMap.setMyLocationEnabled(true); //Enable Location Button
                 mMap.getUiSettings().setZoomControlsEnabled(true); //Enable Zoom Button
 
+                //Location findMe = mMap.getMyLocation();
+
                 currentLocation = getCurrentLocation();
                 animateCamera(currentLocation);
 
@@ -184,9 +187,9 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         }
     }
 
-    void animateCamera(LatLng currentLocation){
+    void animateCamera(LatLng thisLocation){
         cameraPosition = new CameraPosition.Builder()
-                .target(currentLocation)
+                .target(thisLocation)
                 .zoom(14).build();
 
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
@@ -194,7 +197,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     }
 
     LatLng getCurrentLocation() {
-        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        /*locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         //Create a criteria object to retrieve provider
         Criteria criteria = new Criteria();
@@ -203,12 +206,12 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         provider = locationManager.getBestProvider(criteria, true);
 
         //Get current location
-        Location myLocation = locationManager.getLastKnownLocation(provider);
+        Location myLocation = locationManager.getLastKnownLocation(provider);*/
+        Location myLocation = mMap.getMyLocation();
+
         //Avoid error when GPS OFF
-        if (myLocation != null) {
-            currentLocation = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-            return currentLocation;
-        }
+        if (myLocation != null)
+            return new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
         else
            return (new LatLng(37.723357, -122.480698)); //it fix the problem of null location but we may have to change coordinates
 
@@ -255,12 +258,12 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         //String a = String.valueOf(parkedLocation.latitude);
         //String y = String.valueOf(parkedLocation.longitude);
         //x = x + ", " + a;
-        String x = "Count: " + b + "  C-Result: " +  y  + "  C-Real: "  + parkedLocation;// String.valueOf(b);
+        String x = "Count: " + b + "  C-Result: " +  y  + "  C-Real: "  + parkedLocation;// String.valueOf(b);**/
 
-
+        /*String x = "Results: " + getCurrentLocation() + "  PIN: " + latLng;
         Log.d("mytag", x);
         TextView t = (TextView) findViewById(R.id.textView);
-        t.setText(x);**/
+        t.setText(x);*/
     }
 
 
