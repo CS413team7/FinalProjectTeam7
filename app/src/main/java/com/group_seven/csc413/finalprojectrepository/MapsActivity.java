@@ -8,12 +8,10 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -81,7 +79,6 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
         overlay.setVisibility(View.GONE);
-
         setUpMapIfNeeded();
         /*
              Uncomment to delete database and rebuild the database at runtime
@@ -90,7 +87,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
          */
         //db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
         setUpMapIfNeeded(); // Don't change the position of this code line
-        //loadParkingInfo();
+        loadParkingInfo();
     }
 
     @Override
@@ -431,7 +428,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
                 String[] garageLoc = temp.split(",");
                 LatLng garage = new LatLng(Double.parseDouble(garageLoc[1]), Double.parseDouble(garageLoc[0]));
 
-                mMap.addMarker(new MarkerOptions().position(garage).title(name).draggable(true).flat(true).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+                mMap.addMarker(new MarkerOptions().position(garage).title(name).draggable(false).flat(true).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 
             } catch (JSONException e) {
                 // Oops
