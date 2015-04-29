@@ -23,6 +23,7 @@ public class DBConfig
     private static final String DATABASE_NAME = "appDatabase.db";
     private static final String APP_INFO_TABLE = "appInfo";
     private static final String CAR_LOC_TABLE = "car";
+    private static final String FAVORITES_TABLE = "favorites";
     private static final String APP_NAME_COLUMN = "appName";
     private static final String APP_VERSION_COLUMN = "appVersion";
     private static final String APP_STATUS = "appStatus";
@@ -93,6 +94,12 @@ public class DBConfig
                     DIST_FROM_COLUMN + " Real, " +
                     TIME_COLUMN + " Text, " +
                     IS_CAR_PARKED_COLUMN + " INTEGER DEFAULT 0 );");
+            // Favorites
+            db.execSQL("CREATE TABLE IF NOT EXISTS " +
+                       FAVORITES_TABLE +
+                       " ( id integer primary key autoincrement, " +
+                    LATITUDE_COLUMN + " Real, " +
+                    LONGITUDE_COLUMN + " Real );");
 
         }
         catch (SQLException e)
@@ -122,7 +129,14 @@ public class DBConfig
         return cnt;
     }
 
-
+    private int getProfilesCount(String table)
+    {
+        String countQuery = "SELECT  * FROM " + table;
+        Cursor cursor = db.rawQuery(countQuery, null);
+        int cnt = cursor.getCount();
+        cursor.close();
+        return cnt;
+    }
 
     /**
      * Description: Delete a database
@@ -243,6 +257,103 @@ public class DBConfig
     }
 
     /**
+     * Description: Saves a location in favorites
+     * @param latLng LatLng object containing the coordinates of the location to be saved
+     * @return true if the location was saved. Otherwise, returns false
+     */
+    public boolean saveLocationInFavorites (LatLng latLng)
+    {
+
+         try
+         {
+            if (getProfilesCount(FAVORITES_TABLE) < 10)
+            {
+                ContentValues cv = new ContentValues();
+                cv.put(LATITUDE_COLUMN, latLng.latitude);
+                cv.put(LONGITUDE_COLUMN, latLng.longitude);
+                db.insert(FAVORITES_TABLE, null, cv);
+                return true;
+            }
+
+         }
+         catch (SQLException e)
+         {
+
+            Log.d("DbException: ", e.getMessage());
+
+         }
+         return false;
+    }
+
+    /**
+     * Description: gets at at most 10 locations from favorites
+     * @return at most 10 locations, if the table is empty, returns null.
+     */
+    public LatLng [] getLocationsFromFavorites () {
+        try
+        {
+            if (getProfilesCount(FAVORITES_TABLE) > 0)
+            {
+                Cursor c = db.rawQuery("SELECT * FROM " + FAVORITES_TABLE, null);
+                LatLng[] favLocationsList = new LatLng[c.getCount()];
+                double lat = 0.0, lng = 0.0;
+                int index = 0;
+                while (c.moveToNext())
+                {
+                    lat = c.getDouble(c.getColumnIndex(LATITUDE_COLUMN));
+                    lng = c.getDouble(c.getColumnIndex(LONGITUDE_COLUMN));
+                    favLocationsList[index] = new LatLng(lat, lng);
+                    index++;
+                }
+                c.close();
+                return favLocationsList;
+            }
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Description: Deletes a location from favorites
+     * @param location location to be deleted
+     * @return the numbers of locations deleted (normally should be 1 or 0 )
+     */
+    public int deleteLocationFromFavorites(LatLng location)
+    {
+        try
+        {
+            return db.delete(FAVORITES_TABLE, LATITUDE_COLUMN + " =? ", new String[]{String.valueOf(location.latitude)});
+        }
+        catch (SQLException e)
+        {
+            Log.d("DbException: ", e.getMessage());
+        }
+        return 0;
+    }
+
+    /**
+     * Description: Delete one or more than one locations
+     *              from the favorites table
+     * @param locations list of locations to be deleted
+     * @return number of locations deleted
+     */
+    public int deleteLocationsFromFavorites(LatLng [] locations)
+    {
+        int locationsDeleted = 0;
+        for (LatLng loc : locations)
+        {
+            locationsDeleted += deleteLocationFromFavorites(loc);
+        }
+        return locationsDeleted;
+    }
+
+
+
+
+    /**
      * Description: updates parking coordinates in a given context
      * @param context user context for the parking
      * @param latlng LatLong object containing the coordinates to update
@@ -263,46 +374,9 @@ public class DBConfig
         }
     }
 
-    private HashMap <String, String > prepareLatLngListToInsert ( LatLng [] latlngList)
-    {
-         HashMap <String, String > hm = new HashMap<>();
-         String conctLat = "";
-         String concLong = "";
-         int counter = 0;
-         for (LatLng l : latlngList)
-         {
-             if (counter < latlngList.length - 1) {
-                 conctLat += String.valueOf(l.latitude) + "$";
-                 concLong += String.valueOf(l.longitude) + "$";
-             }
-             else
-                conctLat += String.valueOf(l.latitude);
-             counter ++;
-         }
-         hm.put("latitudes", conctLat);
-         hm.put("longitudes", concLong);
-         return hm;
 
-    }
 
-    public void saveMultipleParkingCoordinates (String userContext, LatLng [] latlngList)
-    {
-        try
-        {
-            HashMap<String, String> hm = prepareLatLngListToInsert(latlngList);
-            String latitudes = hm.get("latitudes");
-            String longitudes = hm.get("longitudes");
-            ContentValues cv = new ContentValues();
-            cv.put(LATITUDE_TO_STRING_COLUMN, latitudes);
-            cv.put(LONGITUDE_TO_STRING_COLUMN, longitudes);
-            db.insert(CAR_LOC_TABLE, null, cv);
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
 
-    }
 
     public LatLng [] getMultipleParkingCoordinates (String userContext)
     {
