@@ -25,6 +25,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,7 +37,7 @@ import java.util.List;
 import java.util.Locale;
 
 
-public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLongClickListener {
+public class MapsActivity extends ActionBarActivity implements OnMapLongClickListener, OnMarkerClickListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LocationManager locationManager;
@@ -60,6 +62,7 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
 
     String urlOn = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=on";
     String urlOff = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=off";
+
 
 
     //Enum for easily marking price overlays
@@ -242,7 +245,8 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
             circleExists = true;
         }
 
-        mPin = mMap.addMarker(new MarkerOptions().position(latLng).draggable(false));
+        String address = getStreetName(latLng);
+        mPin = mMap.addMarker(new MarkerOptions().position(latLng).draggable(false).title(address));
 
         CircleOptions markerRadius = new CircleOptions().center(latLng).radius(402.336).strokeWidth(5);
         markerCircle = mMap.addCircle(markerRadius);
@@ -264,6 +268,24 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
         Log.d("mytag", x);
         TextView t = (TextView) findViewById(R.id.textView);
         t.setText(x);*/
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+
+    /*public void drawParkedCar(LatLng drawLocation) {
+
+        String address = getStreetName(drawLocation);
+        currentParkedMarker = mMap.addMarker(new MarkerOptions()
+                .position(drawLocation)
+                .draggable(false)
+                .title(address)
+        .icon(BitmapDescriptorFactory.fromResource(R.drawable.red_little_car)));
+
+        currentParkedMarker.showInfoWindow();*/
+
+
+        return false;
     }
 
 
@@ -443,23 +465,17 @@ public class MapsActivity extends ActionBarActivity implements GoogleMap.OnMapLo
     }
 
     String getStreetName(LatLng lat) {
-
-        Geocoder geocoder;
-        String address = "";
-        List<Address> addresses;
-        geocoder = new Geocoder(this, Locale.getDefault());
+        Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
+        String result = "";
         try {
-            addresses = geocoder.getFromLocation(lat.latitude, lat.latitude, 1);
-            address = addresses.get(0).getAddressLine(0);
-            String city = addresses.get(0).getAddressLine(1);
-            String country = addresses.get(0).getAddressLine(2);
-
+            List<Address> listAddresses = geocoder.getFromLocation(lat.latitude, lat.longitude, 1);
+            if(null!=listAddresses&&listAddresses.size()>0){
+                result = listAddresses.get(0).getAddressLine(0);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return address;
-
+        return result;
     }
 
 
