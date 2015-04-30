@@ -1,5 +1,6 @@
 package com.group_seven.csc413.finalprojectrepository;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -327,7 +328,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // Handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.park_button:
-                if(isParked == true){
+                if(isParked){
                     unPark();
                 }else{
                     park();
@@ -335,6 +336,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 return true;
             case R.id.cancel_button:
                 unPark();
+                return true;
+            case R.id.about:
+                showAbout();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -351,6 +356,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         saveParkedLocation();
 
 
+    }
+
+    public void showAbout(){
+        Intent i = new Intent(this, About.class);
+        startActivity(i);
     }
 
     //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!
