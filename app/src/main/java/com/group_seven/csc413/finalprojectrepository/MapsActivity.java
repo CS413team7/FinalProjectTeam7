@@ -1,8 +1,10 @@
 package com.group_seven.csc413.finalprojectrepository;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.location.Address;
+import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
@@ -14,6 +16,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -29,6 +34,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,10 +47,9 @@ import java.util.Locale;
 public class MapsActivity extends ActionBarActivity implements OnMapLongClickListener, OnMarkerClickListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
-    private LocationManager locationManager;
     private LatLng currentLocation;
     private CameraPosition cameraPosition;
-    private String provider, resultOn, resultOff;
+    private String resultOn, resultOff;
     private Marker mPin; //Single and multiple marker origin
     private Circle markerCircle;
     private boolean pinExists = false;
@@ -85,6 +90,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
         overlay.setVisibility(View.GONE);
+
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
@@ -92,7 +98,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
          */
         //db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
         setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
-        loadParkingInfo();
+        //loadParkingInfo();
     }
 
     @Override
@@ -100,49 +106,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         super.onResume();
         setUpMapIfNeeded();
     }
-
-    boolean checkIfParked(){
-        //check if parked here
-        return true;
-    }
-
-
-    /**
-     * This method accpets 2 LatLng objects as arguments, and a Layer type, and layer weight.
-     * The Layer type decides which type of overlay will be displayed, for example, price, or parking availability.
-     * layer weight will select a color based on a low to high selector.
-     */
-
-    void drawOverlays(LatLng start, LatLng stop, OverlayType layerType, OverlayWeight layerWeight ){
-        int drawColor;
-        int drawWidth;
-
-        switch (layerWeight) {
-            case HIGH:
-                drawColor = Color.RED;
-                drawWidth = 12;
-                break;
-
-            case MEDIUM:
-                drawColor = Color.YELLOW;
-                drawWidth = 11;
-                break;
-
-            default:
-                drawColor = Color.GREEN;
-                drawWidth = 10;
-                break;
-        }
-
-        PolylineOptions rectOptions = new PolylineOptions()
-                .add(start)
-                .add(stop)
-                .width(drawWidth)
-                .color(drawColor);
-
-        Polyline polyline = mMap.addPolyline(rectOptions);
-    }
-
 
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
@@ -170,8 +133,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 mMap.setMyLocationEnabled(true); //Enable Location Button
                 mMap.getUiSettings().setZoomControlsEnabled(true); //Enable Zoom Button
 
-                //Location findMe = mMap.getMyLocation();
-
                 currentLocation = getCurrentLocation();
                 animateCamera(currentLocation);
 
@@ -197,38 +158,27 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 .zoom(14).build();
 
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-        //mPin = mMap.addMarker(new MarkerOptions().position(currentLocation).draggable(true));
     }
 
     LatLng getCurrentLocation() {
-        /*locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        //Create a criteria object to retrieve provider
-        Criteria criteria = new Criteria();
-
-        //Get the name of the best provider
-        provider = locationManager.getBestProvider(criteria, true);
-
-        //Get current location
-        Location myLocation = locationManager.getLastKnownLocation(provider);*/
         Location myLocation = mMap.getMyLocation();
 
-        //Avoid error when GPS OFF
-        if (myLocation != null)
-            return new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+        if (myLocation == null) {
+            LocationManager myLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            myLocation = myLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+            //Create a criteria object to retrieve provider
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+            String provider = myLocationManager.getBestProvider(criteria, true);
+            myLocation = myLocationManager.getLastKnownLocation(provider);
+            if(myLocation != null)
+                return (new LatLng(myLocation.getLatitude(), myLocation.getLongitude()));
+            return  (new LatLng(37.721895, -122.478212));
+
+        }
         else
-           return (new LatLng(37.723357, -122.480698)); //it fix the problem of null location but we may have to change coordinates
-
-    }
-
-    /**
-     * This is where we can add markers or lines, add listeners or move the camera. In this case, we
-     * just add a marker near Africa.
-     * <p/>
-     * This should only be called once and when we are sure that {@link #mMap} is not null.
-     */
-    private void setUpMap(){
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+            return (new LatLng(myLocation.getLatitude(), myLocation.getLongitude()));
     }
 
     @Override
@@ -312,13 +262,13 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
         if(isParked){
-            menu.findItem(R.id.cancel_button).setEnabled(true);
+            menu.findItem(R.id.deleteMarker_button).setVisible(false);
             menu.findItem(R.id.cancel_button).setVisible(true);
-            menu.findItem(R.id.park_button).setTitle("Return");
+            menu.findItem(R.id.park_button).setVisible(false);
         }else{
-            menu.findItem(R.id.cancel_button).setEnabled(false);
+            menu.findItem(R.id.deleteMarker_button).setVisible(false);
             menu.findItem(R.id.cancel_button).setVisible(false);
-            menu.findItem(R.id.park_button).setTitle("Park");
+            menu.findItem(R.id.park_button).setVisible(true);
         }
         return true;
     }
@@ -356,6 +306,42 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         saveParkedLocation();
 
 
+    }
+
+    /**
+     * This method accpets 2 LatLng objects as arguments, and a Layer type, and layer weight.
+     * The Layer type decides which type of overlay will be displayed, for example, price, or parking availability.
+     * layer weight will select a color based on a low to high selector.
+     */
+
+    void drawOverlays(LatLng start, LatLng stop, OverlayType layerType, OverlayWeight layerWeight ){
+        int drawColor;
+        int drawWidth;
+
+        switch (layerWeight) {
+            case HIGH:
+                drawColor = Color.RED;
+                drawWidth = 12;
+                break;
+
+            case MEDIUM:
+                drawColor = Color.YELLOW;
+                drawWidth = 11;
+                break;
+
+            default:
+                drawColor = Color.GREEN;
+                drawWidth = 10;
+                break;
+        }
+
+        PolylineOptions rectOptions = new PolylineOptions()
+                .add(start)
+                .add(stop)
+                .width(drawWidth)
+                .color(drawColor);
+
+        Polyline polyline = mMap.addPolyline(rectOptions);
     }
 
     public void showAbout(){

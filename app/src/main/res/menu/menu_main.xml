@@ -7,6 +7,10 @@
         android:title="@string/cancel_button"
         app:showAsAction="ifRoom" />
 
+    <item android:id="@+id/deleteMarker_button"
+        android:title="@string/deleteMarker_button"
+        app:showAsAction="ifRoom" />
+
     <item android:id="@+id/park_button"
         android:title="@string/park_button"
         app:showAsAction="ifRoom" />
