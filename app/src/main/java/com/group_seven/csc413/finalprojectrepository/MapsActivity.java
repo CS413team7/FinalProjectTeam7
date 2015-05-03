@@ -11,14 +11,14 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -63,6 +63,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     Date timeParked;
     Marker currentParkedMarker; //Use to draw car icon
     RelativeLayout overlay;
+
+    private Menu myMenu;
 
     JSONArray jArrayOn, jArrayOff;
 
@@ -110,7 +112,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
      * installed) and the map has not already been instantiated.. This will ensure that we only ever
-     * call {@link #setUpMap()} once when {@link #mMap} is not null.
+     * call  once when {@link #mMap} is not null.
      * <p/>
      * If it isn't installed {@link SupportMapFragment} (and
      * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
@@ -146,6 +148,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
                 }
 
+                mMap.setOnMarkerClickListener(this);
                 mMap.setOnMapLongClickListener(this);
                 // setUpMap is not being used, i left it there so it may be useful at some point
                 }
@@ -184,23 +187,22 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     @Override
     public void onMapLongClick(LatLng latLng) {
 
-        if(pinExists){
+        if(pinExists)
             mPin.remove();
-        } else {
-            pinExists = true;
-        }
+        pinExists = true;
 
-        if(circleExists){
+        if(circleExists)
             markerCircle.remove();
-        } else {
-            circleExists = true;
-        }
+        circleExists = true;
 
-        String address = getStreetName(latLng);
-        mPin = mMap.addMarker(new MarkerOptions().position(latLng).draggable(false).title(address));
-
-        CircleOptions markerRadius = new CircleOptions().center(latLng).radius(402.336).strokeWidth(5);
+        currentLocation = latLng;
+        //String address = getStreetName(latLng);
+        //mPin = mMap.addMarker(new MarkerOptions().position(latLng).draggable(false).title(address));
+        mPin = mMap.addMarker(new MarkerOptions().position(latLng).draggable(false).title("THIS MARKER"));//.title(address));
+        animateCamera(currentLocation);
+        CircleOptions markerRadius = new CircleOptions().center(currentLocation).radius(402.336).strokeWidth(5);
         markerCircle = mMap.addCircle(markerRadius);
+
 
         String lat =  String.valueOf(latLng.latitude);
         String lon = String.valueOf(latLng.longitude);
@@ -223,20 +225,24 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     @Override
     public boolean onMarkerClick(Marker marker) {
+        mPin = marker;
+        animateCamera(currentLocation);
+        String title = getStreetName(currentLocation);
+        mPin.setTitle(title);
 
-    /*public void drawParkedCar(LatLng drawLocation) {
+        myMenu.findItem(R.id.deleteMarker_button).setVisible(true);
+        if(isParked) {
+            myMenu.findItem(R.id.cancel_button).setVisible(true);
+            myMenu.findItem(R.id.park_button).setVisible(false);
+        }
+        else if(!isParked){
+            myMenu.findItem(R.id.cancel_button).setVisible(false);
+            myMenu.findItem(R.id.park_button).setVisible(true);
+        }
 
-        String address = getStreetName(drawLocation);
-        currentParkedMarker = mMap.addMarker(new MarkerOptions()
-                .position(drawLocation)
-                .draggable(false)
-                .title(address)
-        .icon(BitmapDescriptorFactory.fromResource(R.drawable.red_little_car)));
-
-        currentParkedMarker.showInfoWindow();*/
 
 
-        return false;
+        return true;
     }
 
 
@@ -258,17 +264,18 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        this.myMenu = menu;
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-
-        if(isParked){
-            menu.findItem(R.id.deleteMarker_button).setVisible(false);
-            menu.findItem(R.id.cancel_button).setVisible(true);
-            menu.findItem(R.id.park_button).setVisible(false);
-        }else{
-            menu.findItem(R.id.deleteMarker_button).setVisible(false);
-            menu.findItem(R.id.cancel_button).setVisible(false);
-            menu.findItem(R.id.park_button).setVisible(true);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        if (isParked) {
+                menu.findItem(R.id.deleteMarker_button).setVisible(false);
+                menu.findItem(R.id.cancel_button).setVisible(true);
+                menu.findItem(R.id.park_button).setVisible(false);
+        } else {
+                menu.findItem(R.id.deleteMarker_button).setVisible(false);
+                menu.findItem(R.id.cancel_button).setVisible(false);
+                menu.findItem(R.id.park_button).setVisible(true);
         }
         return true;
     }
@@ -290,6 +297,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             case R.id.about:
                 showAbout();
                 return true;
+            case R.id.deleteMarker_button:
+                mPin.remove();
+                markerCircle.remove();
+                invalidateOptionsMenu();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -304,8 +316,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         drawParkedCar(parkedLocation);
         overlay.setVisibility(View.VISIBLE);
         saveParkedLocation();
-
-
     }
 
     /**
