@@ -1,4 +1,6 @@
 package com.group_seven.csc413.finalprojectrepository;
+import android.content.Context;
+
 import com.google.android.gms.maps.model.LatLng;
 import java.util.*;
 
@@ -8,6 +10,7 @@ import java.util.*;
 public class Favorites
 {
     DBConfig db;
+
 
     public Favorites (DBConfig database)
     {
@@ -36,9 +39,21 @@ public class Favorites
         return locations.toArray(new LatLng[locations.size()]);
     }
 
-    public boolean addLocationToFavorites (LatLng location)
-    {
+    public boolean addLocationToFavorites (LatLng location){
         return db.saveLocationInFavorites(location);
+    }
+
+    public boolean addUniqueToFavorites(LatLng location){
+        if(!isLocationInFavorites(location))
+            return addLocationToFavorites(location);
+        return false;
+    }
+
+    public int isFavoritesFull(){
+        /*if(db.getProfilesCount("favorites") > 10)
+            return true;
+        return false;*/
+        return db.getProfilesCount("favorites");
     }
 
     public int removeLocationFromFavorites (LatLng location)
@@ -55,6 +70,7 @@ public class Favorites
     {
         return db.getLocationsFromFavorites();
     }
+
 
     // Rafael, do your stuff here to have the code more organized
     // So we can have all the favorites stuff just in one place

@@ -129,7 +129,7 @@ public class DBConfig
         return cnt;
     }
 
-    private int getProfilesCount(String table)
+    public int getProfilesCount(String table)
     {
         String countQuery = "SELECT  * FROM " + table;
         Cursor cursor = db.rawQuery(countQuery, null);

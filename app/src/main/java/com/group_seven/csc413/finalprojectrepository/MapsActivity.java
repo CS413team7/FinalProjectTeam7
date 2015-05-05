@@ -18,6 +18,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -231,29 +232,26 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         currentLocation = mPin.getPosition();
         animateCamera(currentLocation);
 
-        /*String x = "Results: " + currentLocation;
-        Log.d("mytag", x);
-        TextView t = (TextView) findViewById(R.id.textView);
-        t.setText(x);*/
-
-            //boolean response = myFavorites.addLocationToFavorites(currentLocation);
-
-
-            //myFav.isLocationInFavorites(currentLocation);
-            //db.saveLocationInFavorites(currentLocation);
-
-            if(isParked) {
+            /*if(isParked) {
                 myMenu.findItem(R.id.park_button).setVisible(false);
-                myMenu.findItem(R.id.cancel_button).setVisible(true);
+                myMenu.findItem(R.id.cancel_button).setVisible(false);
                 myMenu.findItem(R.id.deleteMarker_button).setVisible(!parkedLocation.equals(currentLocation));
                 myMenu.findItem(R.id.saveHistory_button).setVisible(true);
             }
             else if(!isParked){
-                myMenu.findItem(R.id.park_button).setVisible(true);
+                myMenu.findItem(R.id.park_button).setVisible(false);
                 myMenu.findItem(R.id.cancel_button).setVisible(false);
             myMenu.findItem(R.id.deleteMarker_button).setVisible(true);
             myMenu.findItem(R.id.saveHistory_button).setVisible(true);
-        }
+        }*/
+        /*
+        if(isParked && parkedLocation.equals(currentLocation))
+            return true;*/
+
+        myMenu.findItem(R.id.park_button).setVisible(false);
+        myMenu.findItem(R.id.cancel_button).setVisible(isParked && parkedLocation.equals(currentLocation));
+        myMenu.findItem(R.id.deleteMarker_button).setVisible((isParked && !parkedLocation.equals(currentLocation)) || !isParked);
+        myMenu.findItem(R.id.saveHistory_button).setVisible(true);
 
         return true;
     }
@@ -297,11 +295,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
        // Handle presses on the action bar items
         switch (item.getItemId()) {
             case R.id.park_button:
-                if(isParked){
-                    unPark();
-                }else{
-                    park();
-                }
+                park();
                 return true;
             case R.id.cancel_button:
                 unPark();
@@ -313,12 +307,33 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 markerRemove();
                 return true;
             case R.id.saveHistory_button:
-                //myFav.addLocationToFavorites(currentLocation);
+                //myFavorites();
+                /*if(myFavorites.addUniqueToFavorites(currentLocation))
+                    Toast.makeText(getApplicationContext(), "Save to Favorites", Toast.LENGTH_SHORT).show();
+                else if(myFavorites.isFavoritesFull())
+                    Toast.makeText(getApplicationContext(), "Favorites is Full", Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();*/
                 //markerRemove();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    void myFavorites(){
+        int a = myFavorites.isFavoritesFull();
+
+        String x = "A: " + a  + ", CL: " + currentLocation; // + " : " + parkedLocation;
+        boolean b = myFavorites.addLocationToFavorites(currentLocation);
+        boolean aa = myFavorites.isLocationInFavorites(currentLocation);
+        int c = myFavorites.isFavoritesFull();
+        x = x + "\n, B: " + b + ", C: " + c + ", isThere: " + aa;
+
+        Log.d("mytag", x);
+        TextView t = (TextView) findViewById(R.id.textView);
+        t.setText(x);
+
     }
 
     void markerRemove(){
