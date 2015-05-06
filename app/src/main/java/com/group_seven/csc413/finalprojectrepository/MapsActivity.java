@@ -307,6 +307,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 markerRemove();
                 return true;
             case R.id.saveHistory_button:
+
                 //myFavorites();
                 /*if(myFavorites.addUniqueToFavorites(currentLocation))
                     Toast.makeText(getApplicationContext(), "Save to Favorites", Toast.LENGTH_SHORT).show();
