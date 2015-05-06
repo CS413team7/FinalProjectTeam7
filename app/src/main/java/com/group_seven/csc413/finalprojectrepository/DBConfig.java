@@ -8,6 +8,8 @@ import android.util.Log;
 import android.database.Cursor;
 
 import com.google.android.gms.maps.model.LatLng;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 import java.util.*;
 /**
@@ -15,15 +17,15 @@ import java.util.*;
  * Just a base class to start working on the database
  *
  */
-public class DBConfig
-{
+public class DBConfig {
+
     private Context context;
     private SQLiteDatabase db;
     private String userContext;
     private static final String DATABASE_NAME = "appDatabase.db";
     private static final String APP_INFO_TABLE = "appInfo";
-    private static final String CAR_LOC_TABLE = "car";
-    private static final String FAVORITES_TABLE = "favorites";
+    static final String CAR_LOC_TABLE = "car";
+    static final String HISTORY_TABLE = "history";
     private static final String APP_NAME_COLUMN = "appName";
     private static final String APP_VERSION_COLUMN = "appVersion";
     private static final String APP_STATUS = "appStatus";
@@ -31,42 +33,39 @@ public class DBConfig
     private static final String LATITUDE_COLUMN = "latitude";
     private static final String LONGITUDE_COLUMN = "longitude";
     private static final String APP_TIMES_LAUNCHED = "appTimesLaunched";
-    private static final String LATITUDE_TO_STRING_COLUMN = "latitudeToString";
-    private static final String LONGITUDE_TO_STRING_COLUMN = "longitudeToString";
     private static final String TIME_COLUMN = "time";
-    private static final String DIST_FROM_COLUMN = "distanceFrom";
-    private static final String IS_CAR_PARKED_COLUMN = "isCarParked";
+    private static final String IS_IN_FAVORITES = "isInFavorites";
+    private static final String IS_IN_HISTORY = "isInHistory";
+
     private static final String FAVORITES_COLUMN = "favorites";
 
     /**
      * Author: Jose Ortiz
      * Description: Private constructor only can be invoked
-     *              by a instance method
+     * by a instance method
+     *
      * @param c Context of the application
-    */
-    private DBConfig (Context c)
-    {
+     */
+    private DBConfig(Context c) {
         this.context = c.getApplicationContext();
         loadDatabaseConfig();
     }
 
     /**
      * Description: Instance method that creates an object of this class
-     *              by calling the private constructor
+     * by calling the private constructor
+     *
      * @param c Context of the application
      * @return a instance object of this class
      */
-    public static DBConfig loadDbConfiguration (Context c)
-    {
+    public static DBConfig loadDbConfiguration(Context c) {
         return new DBConfig(c);
     }
 
     /**
      * Description: Opens or creates a database and its tables
-     *
      */
-    private void loadDatabaseConfig ()
-    {
+    private void loadDatabaseConfig() {
 
         try {
 
@@ -82,405 +81,342 @@ public class DBConfig
                     APP_STATUS + " INTEGER, " +
                     APP_TIMES_LAUNCHED + " INTEGER DEFAULT 0); ");
 
-            // Car Location
+            // Car Place
             db.execSQL("CREATE TABLE IF NOT EXISTS " +
                     CAR_LOC_TABLE +
                     " ( id integer primary key autoincrement, " +
                     CONTEXT_COLUMN + " Text, " +
                     LATITUDE_COLUMN + " Real, " +
                     LONGITUDE_COLUMN + " Real, " +
-                    LATITUDE_TO_STRING_COLUMN + " Text, " +
-                    LONGITUDE_TO_STRING_COLUMN + " Text, " +
-                    DIST_FROM_COLUMN + " Real, " +
                     TIME_COLUMN + " Text, " +
-                    IS_CAR_PARKED_COLUMN + " INTEGER DEFAULT 0 );");
-            // Favorites
+                    IS_IN_HISTORY + " Text,  " +
+                    IS_IN_FAVORITES + " Text );");
+            // History
             db.execSQL("CREATE TABLE IF NOT EXISTS " +
-                       FAVORITES_TABLE +
-                       " ( id integer primary key autoincrement, " +
+                    HISTORY_TABLE +
+                    " ( id integer primary key autoincrement, " +
+                    CONTEXT_COLUMN + " Text, " +
+                    TIME_COLUMN + " Text, " +
                     LATITUDE_COLUMN + " Real, " +
-                    LONGITUDE_COLUMN + " Real );");
+                    LONGITUDE_COLUMN + " Real, " +
+                    IS_IN_FAVORITES + " Text );");
 
-        }
-        catch (SQLException e)
-        {
+
+        } catch (SQLException e) {
             // Error database couldn't be created or loaded
             Log.d("DbConfiguration: ", "Error while creating " + DATABASE_NAME +
                     " Detailed error: " + e.getMessage());
         }
     }
 
-    public void setUserContext (String context)
+
+
+    private void closeDatabase ()
     {
+        db.close();
+    }
+
+    public void setUserContext(String context) {
         this.userContext = context;
     }
 
-    public String getUserContext ()
-    {
+    public String getUserContext() {
         return userContext;
     }
 
     public int getProfilesCount()
     {
+
         String countQuery = "SELECT  * FROM " + CAR_LOC_TABLE;
         Cursor cursor = db.rawQuery(countQuery, null);
         int cnt = cursor.getCount();
         cursor.close();
+
         return cnt;
     }
 
+
+
+
     public int getProfilesCount(String table)
     {
+
         String countQuery = "SELECT  * FROM " + table;
         Cursor cursor = db.rawQuery(countQuery, null);
         int cnt = cursor.getCount();
         cursor.close();
+
         return cnt;
     }
 
     /**
      * Description: Delete a database
+     *
      * @param databaseName name of the database
-    */
-    public void deleteDatabase (String databaseName)
+     */
+    public void deleteDatabase(String databaseName)
     {
-        try
-        {
+        try {
+
             if (this.context.deleteDatabase(databaseName))
                 Log.d("DbConfiguration: ", "database deleted");
-        }
-        catch (SQLException e)
-        {
+
+        } catch (SQLException e) {
             Log.d("DbConfiguration: ", "Error deleting " +
-                    databaseName + ". Detailed Error: "  + e.getMessage());
+                    databaseName + ". Detailed Error: " + e.getMessage());
         }
     }
-
 
 
     /**
      * Description: Checks database integrity
+     *
      * @return true if the database integrity is ok.
-     *         Otherwise, returns false.
+     * Otherwise, returns false.
      */
-    public boolean isDatabaseOk ()
+    public boolean isDatabaseOk()
     {
-        return db.isDatabaseIntegrityOk();
+
+        boolean isDatabaseOk = false;
+        if (db.isDatabaseIntegrityOk())
+        {
+            closeDatabase();
+            isDatabaseOk = true;
+        }
+        return isDatabaseOk;
+
     }
 
     /**
      * Description: Rebuild the whole database
-     * @param context Activity context: normally this.getBaseContext()
+     *
+     * @param context  Activity context: normally this.getBaseContext()
      * @param database database name
-     * Note: All the data stored in the database will be deleted
+     *                 Note: All the data stored in the database will be deleted
      */
-    public void reBuildDatabase (Context context, String database)
-    {
-        try
-        {
+    public void reBuildDatabase(Context context, String database) {
+        try {
+
             deleteDatabase(database);
             loadDbConfiguration(context);
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             Log.d("DbException: ", e.getMessage());
         }
 
     }
 
-    /**
-     * Description: Saves parking coordinates in the database
-     * @param context user context for the parking
-     * @param latlng LatLong object containing the coordinates to save
-     * @see com.google.android.gms.maps.model.LatLng class
-     */
-    public void saveParkingCoordinates (String context, LatLng latlng)
+    public void saveLocation(Locations loc, String table)
     {
+
+        String isInHistory = "0";
+        String isInFavorites = "0";
+        if (loc.isInHistory() == true)
+            isInHistory = "1";
+        if (loc.isInFavorites() == true)
+            isInFavorites = "1";
         try
         {
+
             ContentValues cv = new ContentValues();
-            cv.put(CONTEXT_COLUMN, context);
-            cv.put(LATITUDE_COLUMN, latlng.latitude);
-            cv.put(LONGITUDE_COLUMN, latlng.longitude);
-            db.insert(CAR_LOC_TABLE, null, cv);
-        }
-        catch (SQLException e)
-        {
+            cv.put(CONTEXT_COLUMN, loc.getStreet());
+            cv.put(LATITUDE_COLUMN, loc.getLatitude());
+            cv.put(LONGITUDE_COLUMN, loc.getLongitude());
+            if (table.equals(CAR_LOC_TABLE))
+              cv.put(IS_IN_HISTORY, isInHistory);
+            cv.put(IS_IN_FAVORITES, isInFavorites);
+            cv.put(TIME_COLUMN, loc.getLastParkingDateToString());
+            db.insert(table, null, cv);
+
+        } catch (SQLException e) {
             Log.d("DbException: ", e.getMessage());
         }
     }
 
 
-    /**
-     * Description: Clear parking coordinates
-     * @param c user Context
-    */
-    public void clearParkingCoordinates (String c)
-    {
+    public void clearLocation(Locations loc, String table) {
         try
         {
-               db.delete(CAR_LOC_TABLE, CONTEXT_COLUMN + "=? ", new String []{c} );
-        }
-        catch (SQLException e)
-        {
+
+            String column = "id";
+            String context = "1";
+            if (table.equals(CAR_LOC_TABLE)) {
+                column = CONTEXT_COLUMN;
+                context = loc.getStreet();
+            }
+
+            db.delete(table, column + "=? ", new String[]{context});
+
+        } catch (SQLException e) {
             Log.d("DbException: ", e.getMessage());
         }
     }
 
-
-
-
-    /**
-     * Description: gets the coordinates of the vehicle parked
-     * @param context user context for the parking
-     * @return a LatLng object with the parking coordinates
-     */
-    public LatLng getParkingCoordinates (String context)
-    {
+    public Locations getLocationBy(String streetName, String table) {
+        Locations loc = new Locations(this);
         try
         {
-            Cursor c = db.rawQuery("SELECT " + LATITUDE_COLUMN + ", " + LONGITUDE_COLUMN +
-                    " FROM " + CAR_LOC_TABLE + " WHERE " + CONTEXT_COLUMN + " =? ", new String[]{context});
-            double lat = 0, lng = 0;
+
+            double lat = 0;
+            double lng = 0;
+            String whereColumn = "id";
+            String context = "1";
+            if (!table.equals(CAR_LOC_TABLE)) {
+                whereColumn = CONTEXT_COLUMN;
+                context = streetName;
+            }
+            Cursor c = db.rawQuery("SELECT * FROM " + table + " WHERE " + whereColumn + " =? ", new String[]{context});
+
             while (c.moveToNext()) {
+                loc.setStreetName(c.getString(c.getColumnIndex(CONTEXT_COLUMN)));
                 lat = c.getDouble(c.getColumnIndex(LATITUDE_COLUMN));
                 lng = c.getDouble(c.getColumnIndex(LONGITUDE_COLUMN));
+                loc.setCoordinates(new LatLng(lat, lng));
+                if (table.equals(CAR_LOC_TABLE) && c.getString(c.getColumnIndex(IS_IN_HISTORY)).equals("1"))
+                    loc.setInHistory(true);
+                else if (table.equals(CAR_LOC_TABLE))
+                    loc.setInHistory(false);
+                if (c.getString(c.getColumnIndex(IS_IN_FAVORITES)).equals("1"))
+                    loc.setInFavorites(true);
+                else
+                    loc.setInFavorites(false);
+                loc.setLastTimeParked(loc.stringToDate(c.getString(c.getColumnIndex(TIME_COLUMN)), "EEE MMM d HH:mm:ss zz yyyy"));
+
+
             }
             c.close();
-            return new LatLng(lat, lng);
-        }
-        catch (SQLException e)
-        {
+
+            return loc;
+        } catch (SQLException e) {
             Log.d("DbException: ", e.getMessage());
         }
-        return new LatLng(0,0);
+        return loc;
     }
 
-    /**
-     * Description: Saves a location in favorites
-     * @param latLng LatLng object containing the coordinates of the location to be saved
-     * @return true if the location was saved. Otherwise, returns false
-     */
-    public boolean saveLocationInFavorites (LatLng latLng)
-    {
+    public void updateLocation(Locations loc, String table) {
+        String isInHistory = "0";
+        String isInFavorites = "0";
+        String column = "id";
+        String context = "1";
+        if (!table.equals(CAR_LOC_TABLE)) {
+            column = CONTEXT_COLUMN;
+            context = loc.getStreet();
+        }
+        if (loc.isInHistory() == true)
+            isInHistory = "1";
+        if (loc.isInFavorites() == true)
+            isInFavorites = "1";
+        try
+        {
 
-         try
-         {
-            if (getProfilesCount(FAVORITES_TABLE) < 10)
+            ContentValues cv = new ContentValues();
+            cv.put(CONTEXT_COLUMN, loc.getStreet());
+            cv.put(LATITUDE_COLUMN, loc.getLatitude());
+            cv.put(LONGITUDE_COLUMN, loc.getLongitude());
+            if (table.equals(CAR_LOC_TABLE))
+              cv.put(IS_IN_HISTORY, isInHistory);
+            cv.put(IS_IN_FAVORITES, isInFavorites);
+            cv.put(TIME_COLUMN, loc.getLastParkingDateToString());
+            String[] args = new String[]{context};
+            db.update(table, cv, column +
+                    "=?", args);
+
+        } catch (SQLException e) {
+            Log.d("DbException: ", e.getMessage());
+        }
+    }
+
+    public boolean chekIfLocationExist(Locations loc, String table)
+    {
+        try
+        {
+
+            String column = "id";
+            String context = "1";
+            if (!table.equals(CAR_LOC_TABLE))
             {
-                ContentValues cv = new ContentValues();
-                cv.put(LATITUDE_COLUMN, latLng.latitude);
-                cv.put(LONGITUDE_COLUMN, latLng.longitude);
-                db.insert(FAVORITES_TABLE, null, cv);
+                column = CONTEXT_COLUMN;
+                context = loc.getStreet();
+            }
+            Cursor c = db.rawQuery("SELECT * FROM " + table + " WHERE " + column + " =? ", new String[]{context});
+            if (c.getCount()>0)
                 return true;
-            }
 
-         }
-         catch (SQLException e)
-         {
 
+        }
+        catch (SQLException e)
+        {
             Log.d("DbException: ", e.getMessage());
-
-         }
-         return false;
+        }
+        return false;
     }
 
-    /**
-     * Description: gets at at most 10 locations from favorites
-     * @return at most 10 locations, if the table is empty, returns null.
-     */
-    public LatLng [] getLocationsFromFavorites () {
+    public void clearLocationAtIndex (Locations loc, String table, int atIndex)
+    {
         try
         {
-            if (getProfilesCount(FAVORITES_TABLE) > 0)
+
+            String column = "id";
+            String context = String.valueOf(atIndex);
+            db.delete(table, column + "=? ", new String[]{context});
+
+        } catch (SQLException e) {
+            Log.d("DbException: ", e.getMessage());
+        }
+
+    }
+
+    public Locations getLocationByIndex (int index, String table)
+    {
+        Locations loc = new Locations (this);
+        try
+        {
+
+            double lat = 0.0, lng = 0.0;
+            String context = String.valueOf(index);
+            Cursor c = db.rawQuery("SELECT * FROM " + table + " WHERE id=?", new String[]{context} );
+            if (c.moveToFirst())
             {
-                Cursor c = db.rawQuery("SELECT * FROM " + FAVORITES_TABLE, null);
-                LatLng[] favLocationsList = new LatLng[c.getCount()];
-                double lat = 0.0, lng = 0.0;
-                int index = 0;
-                while (c.moveToNext())
-                {
-                    lat = c.getDouble(c.getColumnIndex(LATITUDE_COLUMN));
-                    lng = c.getDouble(c.getColumnIndex(LONGITUDE_COLUMN));
-                    favLocationsList[index] = new LatLng(lat, lng);
-                    index++;
-                }
-                c.close();
-                return favLocationsList;
+                loc.setStreetName(c.getString(c.getColumnIndex(CONTEXT_COLUMN)));
+                lat = c.getDouble(c.getColumnIndex(LATITUDE_COLUMN));
+                lng = c.getDouble(c.getColumnIndex(LONGITUDE_COLUMN));
+                loc.setCoordinates(new LatLng(lat, lng));
+                if (table.equals(CAR_LOC_TABLE) && c.getString(c.getColumnIndex(IS_IN_HISTORY)).equals("1"))
+                    loc.setInHistory(true);
+                else if (table.equals(CAR_LOC_TABLE))
+                    loc.setInHistory(false);
+                if (c.getString(c.getColumnIndex(IS_IN_FAVORITES)).equals("1"))
+                    loc.setInFavorites(true);
+                else
+                    loc.setInFavorites(false);
+                loc.setLastTimeParked(loc.stringToDate(c.getString(c.getColumnIndex(TIME_COLUMN)), "EEE MMM d HH:mm:ss zz yyyy"));
             }
+
+            return loc;
         }
         catch (SQLException e)
         {
             Log.d("DbException: ", e.getMessage());
         }
-        return null;
+        return loc;
     }
 
-    /**
-     * Description: Deletes a location from favorites
-     * @param location location to be deleted
-     * @return the numbers of locations deleted (normally should be 1 or 0 )
-     */
-    public int deleteLocationFromFavorites(LatLng location)
+    public ArrayList <Locations> getAllLocations (String table)
     {
-        try
-        {
-            return db.delete(FAVORITES_TABLE, LATITUDE_COLUMN + " =? ", new String[]{String.valueOf(location.latitude)});
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-        return 0;
-    }
+        ArrayList <Locations> locations = new ArrayList<>();
 
-    /**
-     * Description: Delete one or more than one locations
-     *              from the favorites table
-     * @param locations list of locations to be deleted
-     * @return number of locations deleted
-     */
-    public int deleteLocationsFromFavorites(LatLng [] locations)
-    {
-        int locationsDeleted = 0;
-        for (LatLng loc : locations)
-        {
-            locationsDeleted += deleteLocationFromFavorites(loc);
-        }
-        return locationsDeleted;
-    }
-
-
-
-
-    /**
-     * Description: updates parking coordinates in a given context
-     * @param context user context for the parking
-     * @param latlng LatLong object containing the coordinates to update
-     */
-    public void updateParkingCoordinates (String context, LatLng latlng) {
-        try
-        {
-            ContentValues newValues = new ContentValues();
-            newValues.put(LATITUDE_COLUMN, latlng.latitude);
-            newValues.put(LONGITUDE_COLUMN, latlng.longitude);
-            String[] args = new String[]{context};
-            db.update(CAR_LOC_TABLE, newValues, CONTEXT_COLUMN +
-                    "=?", args);
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-    }
-
-
-
-
-
-    public LatLng [] getMultipleParkingCoordinates (String userContext)
-    {
         try
         {
 
-            Cursor c = db.rawQuery("SELECT " + LATITUDE_TO_STRING_COLUMN + ", " + LONGITUDE_TO_STRING_COLUMN +
-                    " FROM " + CAR_LOC_TABLE + " WHERE " + CONTEXT_COLUMN + " =? ", new String[]{userContext});
-            String latitude = "", longitude = "";
-            while (c.moveToNext()) {
-                latitude = c.getString(c.getColumnIndex(LATITUDE_TO_STRING_COLUMN));
-                longitude = c.getString(c.getColumnIndex(LONGITUDE_TO_STRING_COLUMN));
-            }
-            String [] latitudes = latitude.split("$");
-            String [] longitudes = longitude.split("$");
-            LatLng [] ltnlng = new LatLng[latitudes.length];
-            for (int i = 0; i<latitudes.length; i++)
-            {
-
-                ltnlng[i] = new LatLng(Double.parseDouble(latitudes[i]),
-                                       Double.parseDouble(longitudes[i]));
-            }
-            return  ltnlng;
+            int numberOfItems = getProfilesCount(table);
+            for (int i = 1; i<=numberOfItems; i++)
+                locations.add(getLocationByIndex(i, table));
+            return locations;
         }
         catch (SQLException e)
         {
             Log.d("DbException: ", e.getMessage());
         }
-        return null;
-
+        return locations;
     }
-
-    /**
-     * Description: Save the state of the car parking in the database
-     * @param context user context for the parking
-     * @param isParked represents the status of the car
-     * @since this method can be related to the method saveParkingCoordinates,
-     *        you should use both methods in your code
-     */
-    public void saveParkingStatus (String context, boolean isParked)
-    {
-        try
-        {
-            int flag = (isParked)? 1 : 0;
-            ContentValues cv = new ContentValues();
-            cv.put(CONTEXT_COLUMN, context);
-            cv.put(IS_CAR_PARKED_COLUMN, flag);
-            db.insert(CAR_LOC_TABLE, null, cv);
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-    }
-
-    /**
-     * Description: get the parking status by its context
-     * @param context user context for the parking
-     * @return if the car under this context is parked return true
-     *         Otherwise, returns false
-     */
-    public int getParkingStatus (String context)
-    {
-        Cursor c = db.rawQuery("Select " + IS_CAR_PARKED_COLUMN + " FROM " + CAR_LOC_TABLE +
-                               " Where " + CONTEXT_COLUMN + " =? ", new String[]{context});
-        int isParked = 0;
-        if (c.moveToFirst())
-            isParked =   c.getInt(c.getColumnIndex(IS_CAR_PARKED_COLUMN));
-        return isParked;
-
-        /// if (isParked == 1 )
-            // return true;
-        // return false;
-    }
-
-    /**
-     * Description: update the car parked status
-     * @param context user context for the parking
-     * @param isParked represents the status of the car
-     */
-    public void updateParkingStatus (String context, boolean isParked)
-    {
-        try
-        {
-            int flag = (isParked)? 1 : 0;
-            Log.d("DBTest ", String.valueOf(flag));
-            ContentValues cv = new ContentValues();
-            cv.put(IS_CAR_PARKED_COLUMN, flag);
-            String[] args = new String[]{context};
-            // returns the number of items updated
-            db.update(CAR_LOC_TABLE, cv,  CONTEXT_COLUMN +
-                    "=?", args);
-        }
-        catch (SQLException e)
-        {
-            Log.d("DbException: ", e.getMessage());
-        }
-    }
-
-
-
-
-
-
-
-
 }
+
