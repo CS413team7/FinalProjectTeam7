@@ -9,7 +9,7 @@
 
     <string name="settings">Settings</string>
     <string name="history">History</string>
-    <string name="favorites">Favorites</string>
+    <string name="favorites">Add to Favorites</string>
     <string name="about">About</string>
 
     <item name="aboutPage" type="id">CSC 413 Spring 2015 Team 7</item>

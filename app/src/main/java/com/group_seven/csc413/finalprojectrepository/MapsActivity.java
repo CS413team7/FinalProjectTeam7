@@ -20,6 +20,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -43,6 +44,7 @@ import org.json.JSONObject;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.ArrayList;
 
 
 public class MapsActivity extends ActionBarActivity implements OnMapLongClickListener, OnMarkerClickListener {
@@ -64,6 +66,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     Date timeParked;
     Marker currentParkedMarker; //Use to draw car icon
     RelativeLayout overlay;
+    private Locations myLocation;
+    private History myHistory;
     private Favorites myFavorites;
 
     private Menu myMenu;
@@ -91,19 +95,20 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         setContentView(R.layout.activity_maps);
         overlay = (RelativeLayout) findViewById (R.id.overlay);
 
-        // gets the database context
         db = ((Global) this.getApplication()).getDatabaseContext();
         overlay.setVisibility(View.GONE);
+        myLocation = new Locations(db);
+        myHistory = new History(db);
+        myFavorites = new Favorites(db);
 
 
-        myFavorites = new Favorites(this.db);
 
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
              Remember to comment it again, after the database is rebuilt.
          */
-        //db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
+       //db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
         setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
         //loadParkingInfo();
     }
@@ -129,7 +134,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
      * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
      * method in {@link #onResume()} to guarantee that it will be called.
      */
-    private void setUpMapIfNeeded() {
+    private void setUpMapIfNeeded()
+    {
+
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
             // Try to obtain the map from the SupportMapFragment.
@@ -142,8 +149,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
                 currentLocation = getCurrentLocation();
                 animateCamera(currentLocation);
-
-                if(db.getProfilesCount() == 2){
+                Locations myLocation = new Locations (db, currentLocation, getStreetName(currentLocation));
+                if(myLocation.doesExistInDb())
+                {
+                    Log.d("LE", "exist");
                     isParked = true;
                     lastParkedLocation =  loadParkedLocation();//db.getParkingCoordinates("My Current Parked Location");
                     animateCamera(lastParkedLocation);
@@ -181,7 +190,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             myLocation = myLocationManager.getLastKnownLocation(provider);
             if(myLocation != null)
                 return (new LatLng(myLocation.getLatitude(), myLocation.getLongitude()));
-            return  (new LatLng(37.721895, -122.478212));
+            return  (new LatLng(37.721895, -122.4797));
         }
         else
             return (new LatLng(myLocation.getLatitude(), myLocation.getLongitude()));
@@ -306,14 +315,20 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             case R.id.deleteMarker_button:
                 markerRemove();
                 return true;
-            case R.id.saveHistory_button:
-                //myFavorites();
-                /*if(myFavorites.addUniqueToFavorites(currentLocation))
-                    Toast.makeText(getApplicationContext(), "Save to Favorites", Toast.LENGTH_SHORT).show();
+            case R.id.favorites:
+                Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
+                Favorites myFavorites =  new Favorites (db);
+                ArrayList <Locations> locs = myFavorites.getAllFavorites();
+                for (Locations l: locs)
+                {
+                    Log.d("ListFav", l.toString());
+                }
+                if(myFavorites.addLocationToFavorites(loc))
+                    Toast.makeText(getApplicationContext(), "Saved to Favorites", Toast.LENGTH_SHORT).show();
                 else if(myFavorites.isFavoritesFull())
                     Toast.makeText(getApplicationContext(), "Favorites is Full", Toast.LENGTH_SHORT).show();
                 else
-                    Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();*/
+                    Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();
                 //markerRemove();
                 return true;
             default:
@@ -322,19 +337,20 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     }
 
     void myFavorites(){
-        int a = myFavorites.isFavoritesFull();
 
+        boolean a = myFavorites.isFavoritesFull();
+        myLocation = new Locations(db, currentLocation, getStreetName(currentLocation));
         String x = "A: " + a  + ", CL: " + currentLocation; // + " : " + parkedLocation;
-        boolean b = myFavorites.addLocationToFavorites(currentLocation);
-        boolean aa = myFavorites.isLocationInFavorites(currentLocation);
-        int c = myFavorites.isFavoritesFull();
+        boolean b = myFavorites.addLocationToFavorites(myLocation);
+        boolean aa = myFavorites.isLocationInFavorites(myLocation);
+        boolean c = myFavorites.isFavoritesFull();
         x = x + "\n, B: " + b + ", C: " + c + ", isThere: " + aa;
-
         Log.d("mytag", x);
         TextView t = (TextView) findViewById(R.id.textView);
         t.setText(x);
 
     }
+
 
     void markerRemove(){
         if(!mPin.equals(currentParkedMarker)) {
@@ -398,11 +414,19 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!
     void saveParkedLocation(){
-        // also save timeParked;
-        if (db.getProfilesCount() == 1)
-            db.saveParkingCoordinates("My Current Parked Location", parkedLocation);
-        else
-            db.updateParkingCoordinates("My Current Parked Location", parkedLocation);
+        myLocation = new Locations(db, parkedLocation, getStreetName(parkedLocation));
+        History h = new History(db);
+        if (db.getProfilesCount() == 0) {
+            myLocation.saveInDb();
+            h.saveLocationInHistory(myLocation);
+            Log.d("DbTest","Save Called");
+        }
+
+        else {
+            myLocation.updateInDb();
+            h.saveLocationInHistory(myLocation);
+            Log.d("DbTest", "Updated Called");
+        }
     }
 
     LatLng loadParkedLocation(){
@@ -411,13 +435,14 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // it returns null the first time the app runs
         // because there is not parking location saved yet
         //if (db.getProfilesCount() != 0)
-           return db.getParkingCoordinates("My Current Parked Location");
+           return new Locations(db).getLocationFromDb().getCoordinates();
         //return null;
     }
 
     //ERASE LAST PARKED LOCATION FROM DATABASE
-    void clearParkedLocation(){
-        db.clearParkingCoordinates("My Current Parked Location");
+    void clearParkedLocation()
+    {
+        myLocation.clearFromDb();
     }
 
 

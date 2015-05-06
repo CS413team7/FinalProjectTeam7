@@ -1,77 +1,99 @@
 package com.group_seven.csc413.finalprojectrepository;
-import android.content.Context;
 
-import com.google.android.gms.maps.model.LatLng;
-import java.util.*;
+import java.util.ArrayList;
+import android.content.Context;
+import android.util.Log;
 
 /**
- *  Created by Jose Ortiz Costa
+ * Created by School on 5/5/15.
  */
-public class Favorites
+public class Favorites extends History
 {
-    DBConfig db;
 
-
-    public Favorites (DBConfig database)
+    private final int MAX_LOCATIONS_IN_FAVORITES = 10;
+    private DBConfig db;
+    public Favorites (DBConfig db)
     {
-       this.db = database;
+        super (db);
+        this.db = db;
+
     }
 
-    public boolean isLocationInFavorites (LatLng loc)
+    public ArrayList<Locations> getAllFavorites ()
     {
-        LatLng [] ltn = getAllFavoriteLocations();
-        for (LatLng l : ltn)
+        ArrayList <Locations> favoritesList = new ArrayList<>();
+        ArrayList <Locations> historyList = getAllLocationsFromHistory();
+        for (Locations location : historyList)
         {
-            if (l.equals(loc))
+            if (location.isInFavorites() )
+                favoritesList.add(location);
+
+        }
+        return favoritesList;
+    }
+
+    public void removeLocationFromFavorites (Locations loc, boolean wantsToRemoveFromHistory)
+    {
+        if (loc.isInFavorites())
+        {
+            loc.setInFavorites(false);
+            loc.updateInDb();
+        }
+
+        if (wantsToRemoveFromHistory)
+            deleteLocationFromHistory(loc);
+        updateLocationInHistory(loc);
+
+    }
+
+    public boolean willNotBeAdded (Locations loc)
+    {
+        ArrayList <Locations> locations = getAllFavorites();
+        for (Locations l : locations)
+        {
+            if (loc.getCoordinates().toString().equals(l.getCoordinates().toString())) {
+                Log.d("Li", "true");
                 return true;
+            }
         }
         return false;
     }
 
-    public LatLng [] getMatchedLocationsFromFavorites (LatLng [] location)
+    public boolean addLocationToFavorites (Locations loc)
     {
-        ArrayList <LatLng> locations = new ArrayList<>();
-        for (LatLng l : location)
+
+
+
+        if (!willNotBeAdded(loc) && getNumberOfFavoritesLocationsInHistory() < MAX_LOCATIONS_IN_FAVORITES)
         {
-            if (isLocationInFavorites(l))
-               locations.add(l);
+            loc.setInFavorites(true);
+            Log.d("DbTest", String.valueOf(loc.isInFavorites()));
+            loc.updateInDb();
+            updateLocationInHistory(loc);
+            return true;
         }
-        return locations.toArray(new LatLng[locations.size()]);
-    }
-
-    public boolean addLocationToFavorites (LatLng location){
-        return db.saveLocationInFavorites(location);
-    }
-
-    public boolean addUniqueToFavorites(LatLng location){
-        if(!isLocationInFavorites(location))
-            return addLocationToFavorites(location);
         return false;
     }
 
-    public int isFavoritesFull(){
-        /*if(db.getProfilesCount("favorites") > 10)
+    public boolean isFavoritesFull ()
+    {
+        ArrayList <Locations> favorites = getAllFavorites();
+        if (favorites.size() == MAX_LOCATIONS_IN_FAVORITES)
             return true;
-        return false;*/
-        return db.getProfilesCount("favorites");
+        return false;
     }
 
-    public int removeLocationFromFavorites (LatLng location)
+    public boolean isLocationInFavorites (Locations loc)
     {
-        return db.deleteLocationFromFavorites(location);
-    }
+        ArrayList <Locations> favorites = getAllFavorites();
+        for (Locations location : favorites)
+        {
+            if (location.getCoordinates().toString().equals(loc.getCoordinates().toString()))
+                return true;
 
-    public int removeLocationsFromFavorites(LatLng [] locations)
-    {
-        return db.deleteLocationsFromFavorites(locations);
-    }
-
-    public LatLng [] getAllFavoriteLocations ()
-    {
-        return db.getLocationsFromFavorites();
+        }
+        return false;
     }
 
 
-    // Rafael, do your stuff here to have the code more organized
-    // So we can have all the favorites stuff just in one place
 }
