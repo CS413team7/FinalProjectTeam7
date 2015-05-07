@@ -1,5 +1,6 @@
 package com.group_seven.csc413.finalprojectrepository;
 
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
@@ -9,6 +10,7 @@ import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -41,6 +43,7 @@ import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Document;
 
 import java.util.Date;
 import java.util.List;
@@ -70,6 +73,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     private Locations myLocation;
     private History myHistory;
     private Favorites myFavorites;
+    private TextView textProgress;
 
     private Menu myMenu;
 
@@ -101,6 +105,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         myLocation = new Locations(db);
         myHistory = new History(db);
         myFavorites = new Favorites(db);
+
 
 
 
@@ -315,13 +320,16 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             case R.id.about:
                 showAbout();
                 return true;
+            case R.id.history:
+                showHistory();
+                return true;
             case R.id.deleteMarker_button:
                 markerRemove();
                 return true;
             case R.id.save_button:
                 Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
 
-                /*ArrayList <Locations> locs = myFavorites.getAllFavorites();
+                /*  <Locations> locs = myFavorites.getAllFavorites();
                 for (Locations l: locs)
                 {
                     Log.d("ListFav", l.toString());
@@ -341,6 +349,24 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    void showHistory(){
+        ArrayList <Locations> historyLocations = myHistory.getAllLocationsFromHistory();
+        String[] myStreetNames = new String[historyLocations.size()];
+        historyLocations.get(0).getStreet();
+
+
+        for (int i = 0; i < historyLocations.size(); i++) {
+            myStreetNames[i] = historyLocations.get(i).getStreet();
+        }
+
+
+        DialogFragment history = HistoryOverlay.newInstance(myStreetNames);
+
+        history.show(getFragmentManager(), "history");
+    }
+
+
 
     void myFavorites(){
 
@@ -428,6 +454,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         myHistory.saveLocationInHistory(myLocation);
 
 
+
     }
 
     LatLng loadParkedLocation(){
@@ -456,9 +483,35 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         timeParked = null;
         overlay.setVisibility(View.GONE);
         currentParkedMarker.remove();
+        navigate();
 
         //This method should clear the current parked location in database and any current parked variables
     }
+
+    void navigate(){
+        LatLng start = getCurrentLocation();
+        //LatLng end = new LatLng(13.751279688694071, 100.54316081106663);
+        LatLng end = new LatLng(37.722644, -122.465377);
+        GoogleDirection gd = new GoogleDirection(this);
+        gd.setOnDirectionResponseListener(new GoogleDirection.OnDirectionResponseListener() {
+            public void onResponse(String status, Document doc, GoogleDirection gd) {
+                Toast.makeText(getApplicationContext(), status, Toast.LENGTH_SHORT).show();
+
+                gd.animateDirection(mMap, gd.getDirection(doc), GoogleDirection.SPEED_VERY_FAST
+                        , true, true, true, false, null, false, true, new PolylineOptions().width(3));
+            }
+        });
+        gd.setLogging(true);
+        gd.request(start, end, GoogleDirection.MODE_DRIVING);
+
+
+
+
+    }
+
+
+
+
 
     void loadParkingInfo(){
         String tempCoordinates;
