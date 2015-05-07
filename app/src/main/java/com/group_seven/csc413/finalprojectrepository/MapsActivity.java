@@ -55,13 +55,13 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LatLng currentLocation;
+    private LatLng pinLocation;
     private CameraPosition cameraPosition;
     private String resultOn, resultOff;
     private Marker mPin; //Single and multiple marker origin
-    private Circle markerCircle;
     private boolean pinExists = false;
-    private boolean circleExists = false;
     private boolean isParked = false;
+    private boolean isNavigating = false;
     private DBConfig db;
     private JSONObject jObjectOn;
     private JSONObject jObjectOff;
@@ -74,6 +74,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     private History myHistory;
     private Favorites myFavorites;
     private TextView textProgress;
+    private int historyIndex;
+    private ArrayList <Locations> historyLocations;
 
     private Menu myMenu;
 
@@ -206,7 +208,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     @Override
     public void onMapLongClick(LatLng latLng) {
+        drawPin(latLng);
 
+        /*
         if(pinExists && !mPin.equals(currentParkedMarker))
             mPin.remove();
         pinExists = true;
@@ -221,10 +225,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         animateCamera(currentLocation);
         CircleOptions markerRadius = new CircleOptions().center(currentLocation).radius(402.336).strokeWidth(5);
         markerCircle = mMap.addCircle(markerRadius);
+        */
 
 
-        String lat =  String.valueOf(latLng.latitude);
-        String lon = String.valueOf(latLng.longitude);
+
 
         /**int b = db.getProfilesCount(); //This mess is mine(Rafael), ill leave just in case - ill delete it later
         //db.saveParkingCoordinates("My Current Parked Location", new LatLng(11,22));
@@ -246,8 +250,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     public boolean onMarkerClick(Marker marker) {
         mPin = marker;
         mPin.showInfoWindow();
-        currentLocation = mPin.getPosition();
-        animateCamera(currentLocation);
+        pinLocation = mPin.getPosition();
+        animateCamera(pinLocation);
 
             /*if(isParked) {
                 myMenu.findItem(R.id.park_button).setVisible(false);
@@ -269,6 +273,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         myMenu.findItem(R.id.cancel_button).setVisible(isParked && parkedLocation.equals(currentLocation));
         myMenu.findItem(R.id.deleteMarker_button).setVisible((isParked && !parkedLocation.equals(currentLocation)) || !isParked);
         myMenu.findItem(R.id.save_button).setVisible(true);
+        myMenu.findItem(R.id.navigate_button).setVisible(true);
 
         return true;
     }
@@ -293,6 +298,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // Inflate the menu; this adds items to the action bar if it is present.
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
+        myMenu.findItem(R.id.navigate_button).setVisible(false);
         if (isParked) {
                 menu.findItem(R.id.deleteMarker_button).setVisible(false);
                 menu.findItem(R.id.cancel_button).setVisible(true);
@@ -304,6 +310,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 menu.findItem(R.id.park_button).setVisible(true);
                 menu.findItem(R.id.save_button).setVisible(false);
         }
+
+
+
         return true;
     }
 
@@ -324,7 +333,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 showHistory();
                 return true;
             case R.id.deleteMarker_button:
+                myMenu.findItem(R.id.navigate_button).setVisible(false);
                 markerRemove();
+                return true;
+            case R.id.navigate_button:
+                myMenu.findItem(R.id.navigate_button).setVisible(false);
+                navigate(pinLocation);
                 return true;
             case R.id.save_button:
                 Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
@@ -351,10 +365,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     }
 
     void showHistory(){
-        ArrayList <Locations> historyLocations = myHistory.getAllLocationsFromHistory();
+        historyLocations = myHistory.getAllLocationsFromHistory();
         String[] myStreetNames = new String[historyLocations.size()];
         historyLocations.get(0).getStreet();
-
 
         for (int i = 0; i < historyLocations.size(); i++) {
             myStreetNames[i] = historyLocations.get(i).getStreet();
@@ -362,8 +375,29 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
 
         DialogFragment history = HistoryOverlay.newInstance(myStreetNames);
-
         history.show(getFragmentManager(), "history");
+
+        drawPin(historyLocations.get(historyIndex).getCoordinates());
+    }
+
+    void onHistorySelectValue(int value){
+        historyIndex = value;
+    }
+
+    void drawPin(LatLng latLng){
+        if(pinExists && !mPin.equals(currentParkedMarker))
+            mPin.remove();
+        pinExists = true;
+
+        currentLocation = latLng;
+        String address = getStreetName(latLng);
+        mPin = mMap.addMarker(new MarkerOptions().position(latLng).draggable(false).title(address));
+        animateCamera(currentLocation);
+    }
+
+
+    void clearAllHistory(){
+
     }
 
 
@@ -387,7 +421,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     void markerRemove(){
         if(!mPin.equals(currentParkedMarker)) {
             mPin.remove();
-            markerCircle.remove();
             invalidateOptionsMenu();
         }
     }
@@ -483,15 +516,14 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         timeParked = null;
         overlay.setVisibility(View.GONE);
         currentParkedMarker.remove();
-        navigate();
+        navigate(new LatLng(37.9735467, -121.998812));
 
         //This method should clear the current parked location in database and any current parked variables
     }
 
-    void navigate(){
+    void navigate(LatLng end){
+        isNavigating = true;
         LatLng start = getCurrentLocation();
-        //LatLng end = new LatLng(13.751279688694071, 100.54316081106663);
-        LatLng end = new LatLng(37.722644, -122.465377);
         GoogleDirection gd = new GoogleDirection(this);
         gd.setOnDirectionResponseListener(new GoogleDirection.OnDirectionResponseListener() {
             public void onResponse(String status, Document doc, GoogleDirection gd) {
