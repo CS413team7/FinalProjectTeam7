@@ -79,6 +79,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     private int historyIndex;
     private ArrayList <Locations> historyLocations;
     private Button endNavigation;
+    private Button drivingNav;
+    private Button walkingNav;
     private GoogleDirection gd;
 
     private Menu myMenu;
@@ -100,6 +102,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         HIGH,MEDIUM,LOW
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,7 +118,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         myHistory = new History(db);
         myFavorites = new Favorites(db);
         endNavigation = (Button) findViewById(R.id.endNavigation);
+        drivingNav = (Button) findViewById(R.id.drive_nav);
+        walkingNav = (Button) findViewById(R.id.walking_nav);
         endNavigation.setOnClickListener(this);
+        drivingNav.setOnClickListener(this);
+        walkingNav.setOnClickListener(this);
 
 
 
@@ -134,6 +142,14 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         switch (v.getId()) {
             case  R.id.endNavigation: {
                 clearNavigation();
+                break;
+            }
+            case  R.id.drive_nav: {
+                unPark();
+                break;
+            }
+            case  R.id.walking_nav: {
+                unPark();
                 break;
             }
         }
@@ -356,8 +372,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 markerRemove();
                 return true;
             case R.id.navigate_button:
-                myMenu.findItem(R.id.navigate_button).setVisible(false);
-                navigate(pinLocation);
+                //myMenu.findItem(R.id.navigate_button).setVisible(false);
+                navigate(pinLocation, "driving");
                 return true;
             case R.id.save_button:
                 Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
@@ -535,12 +551,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         timeParked = null;
         overlay.setVisibility(View.GONE);
         currentParkedMarker.remove();
-        navigate(myLocation.getCoordinates());
+        navigate(myLocation.getCoordinates(), "driving");
 
         //This method should clear the current parked location in database and any current parked variables
     }
 
-    void navigate(LatLng end){
+    void navigate(LatLng end, String navigationType){
         isNavigating = true;
         navigationOverlay.setVisibility(View.VISIBLE);
         LatLng start = getCurrentLocation();
@@ -549,12 +565,17 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             public void onResponse(String status, Document doc, GoogleDirection gd) {
                 //Toast.makeText(getApplicationContext(), status, Toast.LENGTH_SHORT).show();
 
-                gd.animateDirection(mMap, gd.getDirection(doc), GoogleDirection.SPEED_VERY_FAST
-                        , true, true, true, false, null, false, true, new PolylineOptions().width(3));
+                gd.animateDirection(mMap, gd.getDirection(doc), GoogleDirection.SPEED_NORMAL
+                        , true, true, true, false, null, false, true, new PolylineOptions().width(7));
             }
         });
         gd.setLogging(true);
-        gd.request(start, end, GoogleDirection.MODE_DRIVING);
+        if(navigationType.equals("driving")){
+            gd.request(start, end, GoogleDirection.MODE_DRIVING);
+        }else{
+            gd.request(start, end, GoogleDirection.MODE_BICYCLING);
+        }
+
 
 
 
