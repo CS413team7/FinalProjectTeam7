@@ -2,6 +2,7 @@ package com.group_seven.csc413.finalprojectrepository;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Criteria;
@@ -108,7 +109,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
              Warning: All the data stored before of the rebuild will be lost
              Remember to comment it again, after the database is rebuilt.
          */
-       //db.reBuildDatabase(this.getBaseContext(), "appDatabase.db");
+
+        //db.reBuildDatabase(this, "appDatabase.db");
         setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
         //loadParkingInfo();
     }
@@ -150,12 +152,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 currentLocation = getCurrentLocation();
                 animateCamera(currentLocation);
                 Locations myLocation = new Locations (db, currentLocation, getStreetName(currentLocation));
-
-                if(db.getProfilesCount() == 2)
+                // now 0 is empty table, and 1 is location in table
+                if(db.getProfilesCount() == 1)
                 {
-                    Log.d("LE", "exist");
+                    
                     isParked = true;
-                    lastParkedLocation =  loadParkedLocation();//db.getParkingCoordinates("My Current Parked Location");
+                    lastParkedLocation =  loadParkedLocation();
                     animateCamera(lastParkedLocation);
                     invalidateOptionsMenu();
                     drawParkedCar(lastParkedLocation);
@@ -367,6 +369,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     public void park(){
         isParked = true;
         parkedLocation = getCurrentLocation();
+        myLocation = new Locations(db, parkedLocation, getStreetName(parkedLocation));
         timeParked = new Date();
         animateCamera(parkedLocation);
         saveParkedLocation();
@@ -417,22 +420,14 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     }
 
     //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!!
-    void saveParkedLocation(){
-        myLocation = new Locations(db, parkedLocation, getStreetName(parkedLocation));
-        History h = new History(db);
-        if (db.getProfilesCount() == 0) {
-            myLocation.saveInDb();
-            h.saveLocationInHistory(myLocation);
-            Log.d("DbTest", "Save Called");
-            Log.d("DBTEST", new Locations(db).getLocationFromDb().getCoordinates().toString() );
-        }
+    void saveParkedLocation()
+    {
+        // Parking car table incrementing was disabled so we don't need the
+        // update method for the main table anymore
+        myLocation.saveInDb();
+        myHistory.saveLocationInHistory(myLocation);
 
-        else {
-            myLocation.updateInDb();
-            h.saveLocationInHistory(myLocation);
-            Log.d("DbTest", "Updated Called");
-            Log.d("DBTEST", new Locations(db).getLocationFromDb().getCoordinates().toString() );
-        }
+
     }
 
     LatLng loadParkedLocation(){
@@ -441,7 +436,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // it returns null the first time the app runs
         // because there is not parking location saved yet
         //if (db.getProfilesCount() != 0)
-           Log.d("DBTEST", new Locations(db).getLocationFromDb().getCoordinates().toString() );
+           Log.d("DBTESTINSIDE", new Locations(db).getLocationFromDb().getCoordinates().toString() );
            return new Locations(db).getLocationFromDb().getCoordinates();
         //return null;
     }
