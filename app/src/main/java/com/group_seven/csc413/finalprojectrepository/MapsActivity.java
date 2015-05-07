@@ -416,7 +416,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         startActivity(i);
     }
 
-    //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!
+    //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!!
     void saveParkedLocation(){
         myLocation = new Locations(db, parkedLocation, getStreetName(parkedLocation));
         History h = new History(db);
