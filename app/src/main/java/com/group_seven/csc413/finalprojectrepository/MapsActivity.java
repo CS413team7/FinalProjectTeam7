@@ -151,7 +151,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 animateCamera(currentLocation);
                 Locations myLocation = new Locations (db, currentLocation, getStreetName(currentLocation));
 
-                if(myLocation.doesExistInDb())
+                if(db.getProfilesCount() == 2)
                 {
                     Log.d("LE", "exist");
                     isParked = true;
@@ -423,13 +423,15 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         if (db.getProfilesCount() == 0) {
             myLocation.saveInDb();
             h.saveLocationInHistory(myLocation);
-            Log.d("DbTest","Save Called");
+            Log.d("DbTest", "Save Called");
+            Log.d("DBTEST", new Locations(db).getLocationFromDb().getCoordinates().toString() );
         }
 
         else {
             myLocation.updateInDb();
             h.saveLocationInHistory(myLocation);
             Log.d("DbTest", "Updated Called");
+            Log.d("DBTEST", new Locations(db).getLocationFromDb().getCoordinates().toString() );
         }
     }
 
@@ -439,6 +441,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // it returns null the first time the app runs
         // because there is not parking location saved yet
         //if (db.getProfilesCount() != 0)
+           Log.d("DBTEST", new Locations(db).getLocationFromDb().getCoordinates().toString() );
            return new Locations(db).getLocationFromDb().getCoordinates();
         //return null;
     }

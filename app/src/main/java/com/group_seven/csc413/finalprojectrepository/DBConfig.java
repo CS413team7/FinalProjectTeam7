@@ -84,7 +84,7 @@ public class DBConfig {
             // Car Place
             db.execSQL("CREATE TABLE IF NOT EXISTS " +
                     CAR_LOC_TABLE +
-                    " ( id integer primary key autoincrement, " +
+                    " ( id integer primary key, " +
                     CONTEXT_COLUMN + " Text, " +
                     LATITUDE_COLUMN + " Real, " +
                     LONGITUDE_COLUMN + " Real, " +
@@ -224,7 +224,7 @@ public class DBConfig {
             if (table.equals(CAR_LOC_TABLE))
               cv.put(IS_IN_HISTORY, isInHistory);
             cv.put(IS_IN_FAVORITES, isInFavorites);
-            cv.put(TIME_COLUMN, loc.getLastParkingDateToString());
+            //cv.put(TIME_COLUMN, loc.getLastParkingDateToString());
             db.insert(table, null, cv);
 
         } catch (SQLException e) {
@@ -279,7 +279,7 @@ public class DBConfig {
                     loc.setInFavorites(true);
                 else
                     loc.setInFavorites(false);
-                loc.setLastTimeParked(loc.stringToDate(c.getString(c.getColumnIndex(TIME_COLUMN)), "EEE MMM d HH:mm:ss zz yyyy"));
+                // loc.setLastTimeParked(loc.stringToDate(c.getString(c.getColumnIndex(TIME_COLUMN)), "EEE MMM d HH:mm:ss zz yyyy"));
 
 
             }
