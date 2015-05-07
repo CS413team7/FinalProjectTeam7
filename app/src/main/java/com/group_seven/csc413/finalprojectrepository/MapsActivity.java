@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -51,7 +52,7 @@ import java.util.Locale;
 import java.util.ArrayList;
 
 
-public class MapsActivity extends ActionBarActivity implements OnMapLongClickListener, OnMarkerClickListener {
+public class MapsActivity extends ActionBarActivity implements OnMapLongClickListener, OnMarkerClickListener, View.OnClickListener {
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private LatLng currentLocation;
@@ -70,12 +71,15 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     Date timeParked;
     Marker currentParkedMarker; //Use to draw car icon
     RelativeLayout overlay;
+    RelativeLayout navigationOverlay;
     private Locations myLocation;
     private History myHistory;
     private Favorites myFavorites;
     private TextView textProgress;
     private int historyIndex;
     private ArrayList <Locations> historyLocations;
+    private Button endNavigation;
+    private GoogleDirection gd;
 
     private Menu myMenu;
 
@@ -101,13 +105,16 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         overlay = (RelativeLayout) findViewById (R.id.overlay);
+        navigationOverlay = (RelativeLayout) findViewById (R.id.navigationOverlay);
 
         db = ((Global) this.getApplication()).getDatabaseContext();
         overlay.setVisibility(View.GONE);
+        navigationOverlay.setVisibility(View.GONE);
         myLocation = new Locations(db);
         myHistory = new History(db);
         myFavorites = new Favorites(db);
-
+        endNavigation = (Button) findViewById(R.id.endNavigation);
+        endNavigation.setOnClickListener(this);
 
 
 
@@ -121,6 +128,18 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
         //loadParkingInfo();
     }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case  R.id.endNavigation: {
+                clearNavigation();
+                break;
+            }
+        }
+    }
+
+
 
     @Override
     protected void onResume() {
@@ -516,18 +535,19 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         timeParked = null;
         overlay.setVisibility(View.GONE);
         currentParkedMarker.remove();
-        navigate(new LatLng(37.9735467, -121.998812));
+        navigate(myLocation.getCoordinates());
 
         //This method should clear the current parked location in database and any current parked variables
     }
 
     void navigate(LatLng end){
         isNavigating = true;
+        navigationOverlay.setVisibility(View.VISIBLE);
         LatLng start = getCurrentLocation();
-        GoogleDirection gd = new GoogleDirection(this);
+        gd = new GoogleDirection(this);
         gd.setOnDirectionResponseListener(new GoogleDirection.OnDirectionResponseListener() {
             public void onResponse(String status, Document doc, GoogleDirection gd) {
-                Toast.makeText(getApplicationContext(), status, Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), status, Toast.LENGTH_SHORT).show();
 
                 gd.animateDirection(mMap, gd.getDirection(doc), GoogleDirection.SPEED_VERY_FAST
                         , true, true, true, false, null, false, true, new PolylineOptions().width(3));
@@ -538,10 +558,13 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
 
 
-
-
     }
 
+    void clearNavigation(){
+        isNavigating = false;
+        navigationOverlay.setVisibility(View.GONE);
+        gd.cancelNavigation();
+    }
 
 
 

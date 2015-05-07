@@ -484,6 +484,14 @@ public class GoogleDirection {
         isAnimated = false;
     }
 
+    public void cancelNavigation(){
+        cancelAnimated();
+        animateLine.remove();
+
+
+
+    }
+
     public boolean isAnimated() {
         return isAnimated;
     }

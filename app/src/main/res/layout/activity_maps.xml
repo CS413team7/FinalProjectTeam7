@@ -14,6 +14,26 @@ android:name="com.google.android.gms.maps.SupportMapFragment" />
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="200dp"
+        android:id="@+id/navigationOverlay"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:background="#000000">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Exit Navigation"
+            android:id="@+id/endNavigation"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="200dp"
         android:id="@+id/overlay"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
@@ -45,15 +65,6 @@ android:name="com.google.android.gms.maps.SupportMapFragment" />
             android:textColor="#ffffff"
             android:textStyle="normal" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Large Text"
-            android:id="@+id/textProgress"
-            android:textColor="#ffffff"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true" />
     </RelativeLayout>
 
 
