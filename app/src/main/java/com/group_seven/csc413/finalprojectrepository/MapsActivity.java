@@ -150,6 +150,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 currentLocation = getCurrentLocation();
                 animateCamera(currentLocation);
                 Locations myLocation = new Locations (db, currentLocation, getStreetName(currentLocation));
+
                 if(myLocation.doesExistInDb())
                 {
                     Log.d("LE", "exist");
@@ -260,7 +261,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         myMenu.findItem(R.id.park_button).setVisible(false);
         myMenu.findItem(R.id.cancel_button).setVisible(isParked && parkedLocation.equals(currentLocation));
         myMenu.findItem(R.id.deleteMarker_button).setVisible((isParked && !parkedLocation.equals(currentLocation)) || !isParked);
-        myMenu.findItem(R.id.saveHistory_button).setVisible(true);
+        myMenu.findItem(R.id.save_button).setVisible(true);
 
         return true;
     }
@@ -289,12 +290,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 menu.findItem(R.id.deleteMarker_button).setVisible(false);
                 menu.findItem(R.id.cancel_button).setVisible(true);
                 menu.findItem(R.id.park_button).setVisible(false);
-                menu.findItem(R.id.saveHistory_button).setVisible(false);
+                menu.findItem(R.id.save_button).setVisible(false);
         } else {
                 menu.findItem(R.id.deleteMarker_button).setVisible(false);
                 menu.findItem(R.id.cancel_button).setVisible(false);
                 menu.findItem(R.id.park_button).setVisible(true);
-                menu.findItem(R.id.saveHistory_button).setVisible(false);
+                menu.findItem(R.id.save_button).setVisible(false);
         }
         return true;
     }
@@ -315,20 +316,23 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             case R.id.deleteMarker_button:
                 markerRemove();
                 return true;
-            case R.id.favorites:
+            case R.id.save_button:
                 Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
-                Favorites myFavorites =  new Favorites (db);
-                ArrayList <Locations> locs = myFavorites.getAllFavorites();
+
+                /*ArrayList <Locations> locs = myFavorites.getAllFavorites();
                 for (Locations l: locs)
                 {
                     Log.d("ListFav", l.toString());
-                }
-                if(myFavorites.addLocationToFavorites(loc))
+                }*/
+
+
+                if(!myFavorites.isLocationInFavorites(loc) && myFavorites.addLocationToFavorites(loc))
                     Toast.makeText(getApplicationContext(), "Saved to Favorites", Toast.LENGTH_SHORT).show();
                 else if(myFavorites.isFavoritesFull())
                     Toast.makeText(getApplicationContext(), "Favorites is Full", Toast.LENGTH_SHORT).show();
-                else
+                else if(myFavorites.isLocationInFavorites(loc))
                     Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Other Case", Toast.LENGTH_SHORT).show();
                 //markerRemove();
                 return true;
             default:
@@ -365,10 +369,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         parkedLocation = getCurrentLocation();
         timeParked = new Date();
         animateCamera(parkedLocation);
+        saveParkedLocation();
         invalidateOptionsMenu();
         drawParkedCar(parkedLocation);
         overlay.setVisibility(View.VISIBLE);
-        saveParkedLocation();
     }
 
     /**
