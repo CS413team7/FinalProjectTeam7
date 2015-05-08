@@ -305,8 +305,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             return true;*/
 
         myMenu.findItem(R.id.park_button).setVisible(false);
-        myMenu.findItem(R.id.cancel_button).setVisible(isParked && parkedLocation.equals(currentLocation));
-        myMenu.findItem(R.id.deleteMarker_button).setVisible((isParked && !parkedLocation.equals(currentLocation)) || !isParked);
+        myMenu.findItem(R.id.cancel_button).setVisible(isParked && parkedLocation.equals(pinLocation));
+        myMenu.findItem(R.id.deleteMarker_button).setVisible((isParked && !parkedLocation.equals(pinLocation)) || !isParked);
         myMenu.findItem(R.id.save_button).setVisible(true);
         myMenu.findItem(R.id.navigate_button).setVisible(true);
 
@@ -346,8 +346,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 menu.findItem(R.id.save_button).setVisible(false);
         }
 
-
-
         return true;
     }
 
@@ -383,6 +381,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 {
                     Log.d("ListFav", l.toString());
                 }*/
+                myHistory.saveLocationInHistory(loc);
 
                 if( myFavorites.addLocationToFavorites(loc))
                     Toast.makeText(getApplicationContext(), "Saved to Favorites", Toast.LENGTH_SHORT).show();
@@ -390,8 +389,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                     Toast.makeText(getApplicationContext(), "Favorites is Full", Toast.LENGTH_SHORT).show();
                 else if(myFavorites.isLocationInFavorites(loc))
                     Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();
-                //Toast.makeText(getApplicationContext(), "Other Case", Toast.LENGTH_SHORT).show();
-                //markerRemove();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -420,8 +417,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         DialogFragment history = HistoryOverlay.newInstance(myStreetNames);
         history.show(getFragmentManager(), "history");
 
-        if (!myHistory.isHistoryEmpty())
-          drawPin(historyLocations.get(historyIndex).getCoordinates());
+        //if (!myHistory.isHistoryEmpty())
+          //drawPin(historyLocations.get(historyIndex).getCoordinates());
 
     }
 
@@ -561,7 +558,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         timeParked = null;
         overlay.setVisibility(View.GONE);
         currentParkedMarker.remove();
-        navigate(myLocation.getCoordinates(), "driving");
+        //navigate(myLocation.getCoordinates(), "driving");
 
         //This method should clear the current parked location in database and any current parked variables
     }
