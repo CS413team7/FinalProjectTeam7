@@ -24,7 +24,7 @@ public class History extends Locations
 
     public boolean updateLocationInHistory (Locations loc)
     {
-        if (doesLocationExistInHistory(loc))
+        if (db.chekIfLocationExist(loc, DBConfig.HISTORY_TABLE))
         {
             db.updateLocation(loc, DBConfig.HISTORY_TABLE);
             return true;
@@ -56,6 +56,16 @@ public class History extends Locations
     {
         return db.getAllLocations(DBConfig.HISTORY_TABLE);
 
+    }
+
+    public void clearHistory()
+    {
+        db.deleteAllItems(DBConfig.HISTORY_TABLE);
+    }
+
+    public boolean isHistoryEmpty()
+    {
+        return getAllLocationsFromHistory().isEmpty();
     }
 
 

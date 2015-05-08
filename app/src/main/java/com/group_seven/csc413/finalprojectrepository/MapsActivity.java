@@ -124,8 +124,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         drivingNav.setOnClickListener(this);
         walkingNav.setOnClickListener(this);
 
-
-
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
@@ -134,7 +132,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
         //db.reBuildDatabase(this, "appDatabase.db");
         setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
-        //loadParkingInfo();
+        loadParkingInfo();
+
     }
 
     @Override
@@ -197,12 +196,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 // now 0 is empty table, and 1 is location in table
                 if(db.getProfilesCount() == 1)
                 {
-                    
+
                     isParked = true;
-                    lastParkedLocation =  loadParkedLocation();
-                    animateCamera(lastParkedLocation);
+                    parkedLocation =  loadParkedLocation();
+                    animateCamera(parkedLocation);
                     invalidateOptionsMenu();
-                    drawParkedCar(lastParkedLocation);
+                    drawParkedCar(parkedLocation);
                     overlay.setVisibility(View.VISIBLE);
 
                 }
@@ -384,8 +383,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                     Log.d("ListFav", l.toString());
                 }*/
 
-
-                if(!myFavorites.isLocationInFavorites(loc) && myFavorites.addLocationToFavorites(loc))
+                if( myFavorites.addLocationToFavorites(loc))
                     Toast.makeText(getApplicationContext(), "Saved to Favorites", Toast.LENGTH_SHORT).show();
                 else if(myFavorites.isFavoritesFull())
                     Toast.makeText(getApplicationContext(), "Favorites is Full", Toast.LENGTH_SHORT).show();
@@ -401,18 +399,29 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     void showHistory(){
         historyLocations = myHistory.getAllLocationsFromHistory();
-        String[] myStreetNames = new String[historyLocations.size()];
-        historyLocations.get(0).getStreet();
+        String[] myStreetNames;
 
-        for (int i = 0; i < historyLocations.size(); i++) {
-            myStreetNames[i] = historyLocations.get(i).getStreet();
+        if (myHistory.isHistoryEmpty() == true)
+        {
+            myStreetNames = new  String[]{"History is Empty"};
+
+        }
+        else
+            {
+                myStreetNames = new String[historyLocations.size()];
+                historyLocations.get(0).getStreet();
+                for (int i = 0; i < historyLocations.size(); i++) {
+                myStreetNames[i] = historyLocations.get(i).getStreet();
+            }
         }
 
 
         DialogFragment history = HistoryOverlay.newInstance(myStreetNames);
         history.show(getFragmentManager(), "history");
 
-        drawPin(historyLocations.get(historyIndex).getCoordinates());
+        if (!myHistory.isHistoryEmpty())
+          drawPin(historyLocations.get(historyIndex).getCoordinates());
+
     }
 
     void onHistorySelectValue(int value){
@@ -432,7 +441,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
 
     void clearAllHistory(){
-
+         myHistory.clearHistory();
     }
 
 
@@ -531,7 +540,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // it returns null the first time the app runs
         // because there is not parking location saved yet
         //if (db.getProfilesCount() != 0)
-           Log.d("DBTESTINSIDE", new Locations(db).getLocationFromDb().getCoordinates().toString() );
+           Log.d("DBTESTINSIDE", new Locations(db).getLocationFromDb().getCoordinates().toString());
            return new Locations(db).getLocationFromDb().getCoordinates();
         //return null;
     }
