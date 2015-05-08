@@ -602,7 +602,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         try {
             resultOn = taskOn.get().toString();
             resultOff = taskOff.get().toString();
-          //  Log.d("Hamoon",resultOff);
+            Log.d("Hamoon",resultOff);
 
         } catch (Exception e) { e.printStackTrace(); }
         try {
@@ -629,9 +629,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 LatLng endCoordinate = new LatLng(Double.parseDouble(coordinates[3]), Double.parseDouble(coordinates[2]));
                 drawOverlays(startCoordinate, endCoordinate, OverlayType.PRICE, OverlayWeight.LOW);
 
-
-
-
             } catch (JSONException e) {
                 // Oops
             }
@@ -645,17 +642,24 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 String temp = oneObject.getString("LOC");
                 String name = oneObject.getString("NAME");
                 String address = oneObject.getString("DESC");
+                String occ = oneObject.getString("OCC");
+                String oper = oneObject.getString("OPER");
                 String[] garageLoc = temp.split(",");
                 LatLng garage = new LatLng(Double.parseDouble(garageLoc[1]), Double.parseDouble(garageLoc[0]));
 
+                int parkingAvailable = Integer.parseInt(oper) - Integer.parseInt(occ);
+
+                String gTitle = name + " - " + address + " - Available Parking :" + parkingAvailable;
 
                 currentParkedMarker = mMap.addMarker(new MarkerOptions()
                         .position(garage)
                         .draggable(false)
-                        .title(name + " - " + address)
+                        .title(gTitle)
                         .icon(BitmapDescriptorFactory.fromResource(R.drawable.garagesmall)));
 
                 currentParkedMarker.showInfoWindow();
+
+
 
                 //mMap.addMarker(new MarkerOptions().position(garage).title(name + " - " + address).draggable(false).flat(true).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 
@@ -664,6 +668,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             }
         }
     }
+
+    /**
+     *
+     * @param lat
+     * @return
+     */
 
     String getStreetName(LatLng lat) {
         Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
@@ -678,9 +688,4 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         }
         return result;
     }
-
-
-
-
-
 }
