@@ -8,6 +8,7 @@
 
     <string name="settings">Settings</string>
     <string name="history">History</string>
+    <string name="show_favorites">Favorites</string>
     <string name="favorites">Add to Favorites</string>
     <string name="about">About</string>
     <string name="navigate">Navigate</string>

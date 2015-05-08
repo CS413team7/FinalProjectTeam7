@@ -78,6 +78,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     private TextView textProgress;
     private int historyIndex;
     private ArrayList <Locations> historyLocations;
+    private ArrayList <Locations> favoriteLocations;
     private Button endNavigation;
     private Button drivingNav;
     private Button walkingNav;
@@ -367,6 +368,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             case R.id.history:
                 showHistory();
                 return true;
+            case R.id.show_favorites:
+                showFavorites();
+                return true;
             case R.id.deleteMarker_button:
                 myMenu.findItem(R.id.navigate_button).setVisible(false);
                 markerRemove();
@@ -418,6 +422,24 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     void onHistorySelectValue(int value){
         historyIndex = value;
     }
+
+    void showFavorites(){
+        //getAllFavorites doesnt work :( Halp
+        favoriteLocations = myFavorites.getAllFavorites();
+        String[] myStreetNames = new String[favoriteLocations.size()];
+        favoriteLocations.get(0).getStreet();
+
+        for (int i = 0; i < favoriteLocations.size(); i++) {
+            myStreetNames[i] = favoriteLocations.get(i).getStreet();
+        }
+
+
+        DialogFragment favorites = FavoritesOverlay.newInstance(myStreetNames);
+        favorites.show(getFragmentManager(), "favorites");
+
+
+    }
+
 
     void drawPin(LatLng latLng){
         if(pinExists && !mPin.equals(currentParkedMarker))
