@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,22 +51,31 @@ public class HistoryOverlay extends DialogFragment implements DialogInterface.On
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle("History")
-                .setItems( locations, new DialogInterface.OnClickListener() {
+                .setItems(locations, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         callingActivity.onHistorySelectValue(id);
                     }
 
                 })
+
                 .setPositiveButton("Clear All", new DialogInterface.OnClickListener() {
+
                     public void onClick(DialogInterface dialog, int id) {
+
                         callingActivity.clearAllHistory();
                     }
+
+
                 })
+
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // User cancelled the dialog
                     }
                 });
+
+
+
         // Create the AlertDialog object and return it
         return builder.create();
     }

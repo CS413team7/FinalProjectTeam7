@@ -419,6 +419,11 @@ public class DBConfig {
         return locations;
     }
 
+    public void deleteAllItems (String table)
+    {
+        db.execSQL("delete from "+ table);
+    }
+
     public void closeDb ()
     {
         db.close();

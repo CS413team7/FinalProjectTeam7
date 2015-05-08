@@ -3,14 +3,12 @@ package com.group_seven.csc413.finalprojectrepository;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
-import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Criteria;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationManager;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -24,32 +22,28 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.Circle;
-import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
-import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
-
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.ArrayList;
 
 
 public class MapsActivity extends ActionBarActivity implements OnMapLongClickListener, OnMarkerClickListener, View.OnClickListener {
@@ -126,7 +120,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         walkingNav.setOnClickListener(this);
 
 
-
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
@@ -135,7 +128,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
         //db.reBuildDatabase(this, "appDatabase.db");
         setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
-        //loadParkingInfo();
+        loadParkingInfo();
+
     }
 
     @Override
@@ -198,12 +192,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 // now 0 is empty table, and 1 is location in table
                 if(db.getProfilesCount() == 1)
                 {
-                    
+
                     isParked = true;
-                    lastParkedLocation =  loadParkedLocation();
-                    animateCamera(lastParkedLocation);
+                    parkedLocation =  loadParkedLocation();
+                    animateCamera(parkedLocation);
                     invalidateOptionsMenu();
-                    drawParkedCar(lastParkedLocation);
+                    drawParkedCar(parkedLocation);
                     overlay.setVisibility(View.VISIBLE);
 
                 }
@@ -306,8 +300,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             return true;*/
 
         myMenu.findItem(R.id.park_button).setVisible(false);
-        myMenu.findItem(R.id.cancel_button).setVisible(isParked && parkedLocation.equals(currentLocation));
-        myMenu.findItem(R.id.deleteMarker_button).setVisible((isParked && !parkedLocation.equals(currentLocation)) || !isParked);
+        myMenu.findItem(R.id.cancel_button).setVisible(isParked && parkedLocation.equals(pinLocation));
+        myMenu.findItem(R.id.deleteMarker_button).setVisible((isParked && !parkedLocation.equals(pinLocation)) || !isParked);
         myMenu.findItem(R.id.save_button).setVisible(true);
         myMenu.findItem(R.id.navigate_button).setVisible(true);
 
@@ -347,8 +341,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 menu.findItem(R.id.save_button).setVisible(false);
         }
 
-
-
         return true;
     }
 
@@ -387,16 +379,14 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 {
                     Log.d("ListFav", l.toString());
                 }*/
+                myHistory.saveLocationInHistory(loc);
 
-
-                if(!myFavorites.isLocationInFavorites(loc) && myFavorites.addLocationToFavorites(loc))
+                if( myFavorites.addLocationToFavorites(loc))
                     Toast.makeText(getApplicationContext(), "Saved to Favorites", Toast.LENGTH_SHORT).show();
                 else if(myFavorites.isFavoritesFull())
                     Toast.makeText(getApplicationContext(), "Favorites is Full", Toast.LENGTH_SHORT).show();
                 else if(myFavorites.isLocationInFavorites(loc))
                     Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();
-                //Toast.makeText(getApplicationContext(), "Other Case", Toast.LENGTH_SHORT).show();
-                //markerRemove();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -405,18 +395,29 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     void showHistory(){
         historyLocations = myHistory.getAllLocationsFromHistory();
-        String[] myStreetNames = new String[historyLocations.size()];
-        historyLocations.get(0).getStreet();
+        String[] myStreetNames;
 
-        for (int i = 0; i < historyLocations.size(); i++) {
-            myStreetNames[i] = historyLocations.get(i).getStreet();
+        if (myHistory.isHistoryEmpty() == true)
+        {
+            myStreetNames = new  String[]{"History is Empty"};
+
+        }
+        else
+            {
+                myStreetNames = new String[historyLocations.size()];
+                historyLocations.get(0).getStreet();
+                for (int i = 0; i < historyLocations.size(); i++) {
+                myStreetNames[i] = historyLocations.get(i).getStreet();
+            }
         }
 
 
         DialogFragment history = HistoryOverlay.newInstance(myStreetNames);
         history.show(getFragmentManager(), "history");
 
-        drawPin(historyLocations.get(historyIndex).getCoordinates());
+        //if (!myHistory.isHistoryEmpty())
+          //drawPin(historyLocations.get(historyIndex).getCoordinates());
+
     }
 
     void onHistorySelectValue(int value){
@@ -454,7 +455,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
 
     void clearAllHistory(){
-
+         myHistory.clearHistory();
     }
 
 
@@ -553,7 +554,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // it returns null the first time the app runs
         // because there is not parking location saved yet
         //if (db.getProfilesCount() != 0)
-           Log.d("DBTESTINSIDE", new Locations(db).getLocationFromDb().getCoordinates().toString() );
+           Log.d("DBTESTINSIDE", new Locations(db).getLocationFromDb().getCoordinates().toString());
            return new Locations(db).getLocationFromDb().getCoordinates();
         //return null;
     }
@@ -573,7 +574,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         timeParked = null;
         overlay.setVisibility(View.GONE);
         currentParkedMarker.remove();
-        navigate(myLocation.getCoordinates(), "driving");
+        //navigate(myLocation.getCoordinates(), "driving");
 
         //This method should clear the current parked location in database and any current parked variables
     }
@@ -623,7 +624,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         try {
             resultOn = taskOn.get().toString();
             resultOff = taskOff.get().toString();
-          //  Log.d("Hamoon",resultOff);
+            Log.d("Hamoon",resultOff);
 
         } catch (Exception e) { e.printStackTrace(); }
         try {
@@ -650,9 +651,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 LatLng endCoordinate = new LatLng(Double.parseDouble(coordinates[3]), Double.parseDouble(coordinates[2]));
                 drawOverlays(startCoordinate, endCoordinate, OverlayType.PRICE, OverlayWeight.LOW);
 
-
-
-
             } catch (JSONException e) {
                 // Oops
             }
@@ -666,15 +664,38 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 String temp = oneObject.getString("LOC");
                 String name = oneObject.getString("NAME");
                 String address = oneObject.getString("DESC");
+                String occ = oneObject.getString("OCC");
+                String oper = oneObject.getString("OPER");
                 String[] garageLoc = temp.split(",");
                 LatLng garage = new LatLng(Double.parseDouble(garageLoc[1]), Double.parseDouble(garageLoc[0]));
-                mMap.addMarker(new MarkerOptions().position(garage).title(name + " - " + address).draggable(false).flat(true).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
+
+                int parkingAvailable = Integer.parseInt(oper) - Integer.parseInt(occ);
+
+                String gTitle = name + " - " + address + " - Available Parking :" + parkingAvailable;
+
+                currentParkedMarker = mMap.addMarker(new MarkerOptions()
+                        .position(garage)
+                        .draggable(false)
+                        .title(gTitle)
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.garagesmall)));
+
+                currentParkedMarker.showInfoWindow();
+
+
+
+                //mMap.addMarker(new MarkerOptions().position(garage).title(name + " - " + address).draggable(false).flat(true).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)));
 
             } catch (JSONException e) {
                 // Oops
             }
         }
     }
+
+    /**
+     *
+     * @param lat
+     * @return
+     */
 
     String getStreetName(LatLng lat) {
         Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
@@ -689,9 +710,4 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         }
         return result;
     }
-
-
-
-
-
 }

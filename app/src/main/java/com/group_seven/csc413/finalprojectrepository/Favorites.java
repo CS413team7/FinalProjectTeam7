@@ -32,42 +32,26 @@ public class Favorites extends History
         return favoritesList;
     }
 
-    public void removeLocationFromFavorites (Locations loc, boolean wantsToRemoveFromHistory)
+    public boolean deleteLocationFromFavorites (Locations loc)
     {
-        if (loc.isInFavorites())
+        if (isLocationInFavorites(loc))
         {
+            Log.d("ISlocation", "true");
             loc.setInFavorites(false);
-            loc.updateInDb();
-        }
-
-        if (wantsToRemoveFromHistory)
-            deleteLocationFromHistory(loc);
-        updateLocationInHistory(loc);
-
-    }
-
-    public boolean willNotBeAdded (Locations loc)
-    {
-        ArrayList <Locations> locations = getAllFavorites();
-        for (Locations l : locations)
-        {
-            if (loc.getCoordinates().toString().equals(l.getCoordinates().toString())) {
-                Log.d("Li", "true");
-                return true;
-            }
+            updateLocationInHistory(loc);
+            return true;
         }
         return false;
     }
 
+
     public boolean addLocationToFavorites (Locations loc)
     {
 
-
-
-        if (!willNotBeAdded(loc) && getNumberOfFavoritesLocationsInHistory() < MAX_LOCATIONS_IN_FAVORITES)
+        if (!isLocationInFavorites(loc) && getNumberOfFavoritesLocationsInHistory() < MAX_LOCATIONS_IN_FAVORITES)
         {
             loc.setInFavorites(true);
-            Log.d("DbTest", String.valueOf(loc.isInFavorites()));
+            Log.d("DbTestFav", String.valueOf(loc.isInFavorites()));
             loc.updateInDb();
             updateLocationInHistory(loc);
             return true;
@@ -94,6 +78,17 @@ public class Favorites extends History
         }
         return false;
     }
+
+    public void clearFavorites ()
+    {
+        ArrayList <Locations> fav = getAllFavorites();
+        for (Locations f : fav)
+        {
+            deleteLocationFromFavorites(f);
+        }
+    }
+
+
 
 
 }
