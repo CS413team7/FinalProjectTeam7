@@ -435,6 +435,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         }
 
 
+
         DialogFragment favorites = FavoritesOverlay.newInstance(myStreetNames);
         favorites.show(getFragmentManager(), "favorites");
 
