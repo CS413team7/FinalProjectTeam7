@@ -625,7 +625,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         try {
             resultOn = taskOn.get().toString();
             resultOff = taskOff.get().toString();
-            Log.d("Hamoon",resultOff);
+           // Log.d("Hamoon",resultOff);
 
         } catch (Exception e) { e.printStackTrace(); }
         try {
@@ -678,7 +678,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                         .position(garage)
                         .draggable(false)
                         .title(gTitle)
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.garagesmall)));
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.garage_icon)));
 
                 currentParkedMarker.showInfoWindow();
 
