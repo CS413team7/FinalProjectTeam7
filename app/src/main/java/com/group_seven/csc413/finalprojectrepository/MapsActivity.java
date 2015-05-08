@@ -124,6 +124,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         drivingNav.setOnClickListener(this);
         walkingNav.setOnClickListener(this);
 
+
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost

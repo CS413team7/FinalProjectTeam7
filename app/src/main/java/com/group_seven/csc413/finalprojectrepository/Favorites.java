@@ -79,7 +79,14 @@ public class Favorites extends History
         return false;
     }
 
-
+    public void clearFavorites ()
+    {
+        ArrayList <Locations> fav = getAllFavorites();
+        for (Locations f : fav)
+        {
+            deleteLocationFromFavorites(f);
+        }
+    }
 
 
 
