@@ -364,20 +364,35 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 navigate(pinLocation, "driving");
                 return true;
             case R.id.save_button:
-                Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
-                myHistory.saveLocationInHistory(loc);
-                if( myFavorites.addLocationToFavorites(loc))
-                    Toast.makeText(getApplicationContext(), "Saved to Favorites", Toast.LENGTH_SHORT).show();
-                else if(myFavorites.isFavoritesFull())
-                    Toast.makeText(getApplicationContext(), "Favorites is Full", Toast.LENGTH_SHORT).show();
-                else if(myFavorites.isLocationInFavorites(loc))
-                    Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();
+                saveLocationToFavorites();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
+    void clearFavorites ()
+    {
+        myFavorites.clearFavorites();
+    }
+
+    /**
+     * Saves location to favorites, and saves it in history if it does not exist
+     */
+    void saveLocationToFavorites ()
+    {
+        Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
+        if (!myHistory.isLocationInHistory(loc))
+        {
+            myHistory.saveLocationInHistory(loc);
+        }
+        if( myFavorites.addLocationToFavorites(loc))
+            Toast.makeText(getApplicationContext(), "Saved to Favorites", Toast.LENGTH_SHORT).show();
+        else if(myFavorites.isFavoritesFull())
+            Toast.makeText(getApplicationContext(), "Favorites is Full", Toast.LENGTH_SHORT).show();
+        else if(myFavorites.isLocationInFavorites(loc))
+            Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();
+    }
     void showHistory(){
         historyLocations = myHistory.getAllLocationsFromHistory();
         String[] myStreetNames;
@@ -415,12 +430,24 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // wasn't being initialized in on create. I initialized it on onCreate.
         // Please initialize variables when creating a new one!!!!!
         favoriteLocations = myFavorites.getAllFavorites();
-        String[] myStreetNames = new String[favoriteLocations.size()];
-        favoriteLocations.get(0).getStreet();
+        String [] myStreetNames;
+        if (myHistory.getNumberOfFavoritesInHistory() == 0)
+        {
+            // Checks for empty array
+            myStreetNames = new  String[]{"Favorites is Empty"};
 
-        for (int i = 0; i < favoriteLocations.size(); i++) {
-            myStreetNames[i] = favoriteLocations.get(i).getStreet();
         }
+        else
+        {
+            // Array contains favorites
+            myStreetNames = new String[favoriteLocations.size()];
+            favoriteLocations.get(0).getStreet();
+            for (int i = 0; i < favoriteLocations.size(); i++) {
+                myStreetNames[i] = favoriteLocations.get(i).getStreet();
+            }
+
+        }
+
         DialogFragment favorites = FavoritesOverlay.newInstance(myStreetNames);
         favorites.show(getFragmentManager(), "favorites");
 

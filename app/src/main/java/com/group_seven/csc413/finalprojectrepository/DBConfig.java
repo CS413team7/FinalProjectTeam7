@@ -86,7 +86,7 @@ public class DBConfig {
                     APP_INFO_TABLE +
                     " ( id integer primary key autoincrement, " +
                     APP_NAME_COLUMN + " Text," +
-                    APP_VERSION_COLUMN + " Text, " +
+                    APP_VERSION_COLUMN + " INTEGER, " +
                     APP_STATUS + " INTEGER, " +
                     APP_TIMES_LAUNCHED + " INTEGER ); ");
 
@@ -170,7 +170,9 @@ public class DBConfig {
     {
         ContentValues cv = new ContentValues();
         cv.put(APP_NAME_COLUMN, APPNAME);
-        cv.put(APP_VERSION_COLUMN, APPVERSION);
+        int appVersion = db.getVersion();
+        appVersion++;
+        cv.put(APP_VERSION_COLUMN, appVersion);
         cv.put(APP_STATUS, APPSTATUS);
         db.insert(APP_INFO_TABLE, null, cv);
 
@@ -409,11 +411,15 @@ public class DBConfig {
                 column = CONTEXT_COLUMN;
                 context = loc.getStreet();
             }
-            Cursor c = db.rawQuery("SELECT * FROM " + table + " WHERE " + column + " =? ", new String[]{context});
-            if (c.getCount()>0)
-                return true;
-
-
+            Cursor c = db.rawQuery("SELECT " + LATITUDE_COLUMN + ", " + LONGITUDE_COLUMN + " FROM " + table + " WHERE " + column + " =? ", new String[]{context});
+            double lat, lng;
+            while (c.moveToNext())
+            {
+                lat = c.getDouble(c.getColumnIndex(LATITUDE_COLUMN));
+                lng = c.getDouble(c.getColumnIndex(LONGITUDE_COLUMN));
+                if (loc.getLatitude() == lat && loc.getLongitude() == lng)
+                    return true;
+            }
         }
         catch (SQLException e)
         {

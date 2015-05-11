@@ -61,7 +61,7 @@ public class History extends Locations
     /**
      * Description: Deletes a location from history
      * @param loc   Locations object to be deleted
-     * @see locations class
+     * @see Locations class
      */
     public void deleteLocationFromHistory ( Locations loc)
     {
@@ -85,7 +85,7 @@ public class History extends Locations
      *              Otherwise, returns false
      * @see         Locations class
      */
-    public boolean doesLocationExistInHistory (Locations loc)
+    public boolean isLocationInHistory (Locations loc)
     {
         return db.chekIfLocationExist(loc, DBConfig.HISTORY_TABLE);
     }

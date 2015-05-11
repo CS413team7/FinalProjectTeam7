@@ -16,8 +16,8 @@ public class FavoritesOverlay extends DialogFragment implements DialogInterface.
     MapsActivity callingActivity;
     ArrayList<Integer> mSelectedItems;
 
-    static HistoryOverlay newInstance(String[] inputLocations) {
-        HistoryOverlay f = new HistoryOverlay();
+    static FavoritesOverlay newInstance(String[] inputLocations) {
+        FavoritesOverlay f = new FavoritesOverlay();
 
         // Supply num input as an argument.
         Bundle args = new Bundle();
@@ -67,7 +67,7 @@ public class FavoritesOverlay extends DialogFragment implements DialogInterface.
                         })
                 .setPositiveButton("Clear All", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        callingActivity.clearAllHistory();
+                        callingActivity.clearFavorites();
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
