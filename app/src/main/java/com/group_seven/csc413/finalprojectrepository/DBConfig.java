@@ -1,24 +1,26 @@
 package com.group_seven.csc413.finalprojectrepository;
-
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.database.Cursor;
-
 import com.google.android.gms.maps.model.LatLng;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-
 import java.util.*;
+
 /**
- * Created by Jose Ortiz Costa on 4/18/15.
- * Just a base class to start working on the database
- *
+ *  @Author:      Jose Ortiz Costa
+ *  @date:        04/08/2015
+ *  @file:        DBConfig.java
+ *  @Description: This class is the core database management of this
+ *                aplications, it contains primitive methods such
+ *                as insert, update, delete... etc. Those methods
+ *                will be implemented or extended by other classes in
+ *                order to connect the aplication to this database and
+ *                perform those operations
  */
 public class DBConfig {
-
+    // Variables and constants
     private Context context;
     private SQLiteDatabase db;
     private String userContext;
@@ -36,34 +38,41 @@ public class DBConfig {
     private static final String TIME_COLUMN = "time";
     private static final String IS_IN_FAVORITES = "isInFavorites";
     private static final String IS_IN_HISTORY = "isInHistory";
-
+    private static final String APPVERSION = "1.0";
+    private static final String APPNAME = "HereIsMyCar";
+    private static final String APPSTATUS = "debuging";
     private static final String FAVORITES_COLUMN = "favorites";
 
     /**
-     * Author: Jose Ortiz
-     * Description: Private constructor only can be invoked
-     * by a instance method
      *
-     * @param c Context of the application
+     * Description: Private constructor
+     * @param c     application context: eg. activity context using this class
      */
-    private DBConfig(Context c) {
+    private DBConfig(Context c)
+    {
         this.context = c.getApplicationContext();
         loadDatabaseConfig();
     }
 
     /**
-     * Description: Instance method that creates an object of this class
-     * by calling the private constructor
      *
-     * @param c Context of the application
-     * @return a instance object of this class
+     * Description: Instance method that loads configuration
+     *              from this class by returning a object of
+     *              it
+     * @param c     Application context
+     * @return      an object of this class
      */
-    public static DBConfig loadDbConfiguration(Context c) {
+    public static DBConfig loadDbConfiguration(Context c)
+    {
         return new DBConfig(c);
     }
 
     /**
-     * Description: Opens or creates a database and its tables
+     * Description: If the application run and the app database does not
+     *              exist, then create a new one with its correspondent
+     *              tables. Otherwise, just loa the existing database and tables
+     *              Also, this method insert the app configuration information
+     *              if the application is run for the fist time
      */
     private void loadDatabaseConfig() {
 
@@ -79,7 +88,7 @@ public class DBConfig {
                     APP_NAME_COLUMN + " Text," +
                     APP_VERSION_COLUMN + " Text, " +
                     APP_STATUS + " INTEGER, " +
-                    APP_TIMES_LAUNCHED + " INTEGER DEFAULT 0); ");
+                    APP_TIMES_LAUNCHED + " INTEGER ); ");
 
             // Car Place
             db.execSQL("CREATE TABLE IF NOT EXISTS " +
@@ -101,6 +110,10 @@ public class DBConfig {
                     LONGITUDE_COLUMN + " Real, " +
                     IS_IN_FAVORITES + " Text );");
 
+            if (getProfilesCount(APP_INFO_TABLE) == 0)
+                // app was run for the first time
+                insertAppConfigInfo();
+
 
         } catch (SQLException e) {
             // Error database couldn't be created or loaded
@@ -110,20 +123,35 @@ public class DBConfig {
     }
 
 
-
+    /**
+     *  Description: close the database instance if it was opened
+     */
     private void closeDatabase ()
     {
         db.close();
     }
 
+    /**
+     * Description:   Sets the user context of this application
+     * @param context user context
+     */
     public void setUserContext(String context) {
         this.userContext = context;
     }
 
-    public String getUserContext() {
+    /**
+     * Description: gets the user context of this application
+     * @return      the user application context
+     */
+    public String getUserContext()
+    {
         return userContext;
     }
 
+    /**
+     * Description: Count the existing rows in the table car
+     * @return      the number of rows of that table
+     */
     public int getProfilesCount()
     {
 
@@ -135,9 +163,25 @@ public class DBConfig {
         return cnt;
     }
 
+    /**
+     * Description: Inserts the application configuration information
+     */
+    private void insertAppConfigInfo()
+    {
+        ContentValues cv = new ContentValues();
+        cv.put(APP_NAME_COLUMN, APPNAME);
+        cv.put(APP_VERSION_COLUMN, APPVERSION);
+        cv.put(APP_STATUS, APPSTATUS);
+        db.insert(APP_INFO_TABLE, null, cv);
 
+    }
 
-
+    /**
+     * Description: Gets the number of rows in the table
+     *              given as an argument
+     * @param table table to get the number of rows
+     * @return      number of rows in table
+     */
     public int getProfilesCount(String table)
     {
 
@@ -150,8 +194,7 @@ public class DBConfig {
     }
 
     /**
-     * Description: Delete a database
-     *
+     * Description:        Delete a database
      * @param databaseName name of the database
      */
     public void deleteDatabase(String databaseName)
@@ -170,9 +213,8 @@ public class DBConfig {
 
     /**
      * Description: Checks database integrity
-     *
-     * @return true if the database integrity is ok.
-     * Otherwise, returns false.
+     * @return      True if the database integrity is ok.
+     *              Otherwise, returns false.
      */
     public boolean isDatabaseOk()
     {
@@ -188,8 +230,7 @@ public class DBConfig {
     }
 
     /**
-     * Description: Rebuild the whole database
-     *
+     * Description:    Rebuild the whole database
      * @param context  Activity context: normally this.getBaseContext()
      * @param database database name
      *                 Note: All the data stored in the database will be deleted
@@ -205,9 +246,16 @@ public class DBConfig {
 
     }
 
+    /**
+     *  Description: Saves location in database
+     *  @param loc   object locations to be saved
+     *  @param table table where the object locations will be saved
+     *  @see:        Locations class
+     */
     public void saveLocation(Locations loc, String table)
     {
-
+        // Convert from boolean to Integer because SQLite just
+        // accept integers instead of boolean
         String isInHistory = "0";
         String isInFavorites = "0";
         if (loc.isInHistory() == true)
@@ -216,7 +264,6 @@ public class DBConfig {
             isInFavorites = "1";
         try
         {
-
             ContentValues cv = new ContentValues();
             cv.put(CONTEXT_COLUMN, loc.getStreet());
             cv.put(LATITUDE_COLUMN, loc.getLatitude());
@@ -232,7 +279,12 @@ public class DBConfig {
         }
     }
 
-
+    /**
+     * Description: Clears a row in database
+     * @param loc   Locations object to be cleared
+     * @param table Table where the items to be cleared are stored
+     * @see:        Locations class
+     */
     public void clearLocation(Locations loc, String table) {
         try
         {
@@ -251,6 +303,13 @@ public class DBConfig {
         }
     }
 
+    /**
+     * Description:      Gets a location by street name
+     * @param streetName Name of the street
+     * @param table      Table where location is stored
+     * @return           A Locations object
+     * @see              Locations class
+     */
     public Locations getLocationBy(String streetName, String table) {
         Locations loc = new Locations(this);
         try
@@ -292,6 +351,12 @@ public class DBConfig {
         return loc;
     }
 
+    /**
+     * Description: Update a location in database
+     * @param loc   Locations object to be updated
+     * @param table Table storing items to be updated
+     * @see:        Locations class
+     */
     public void updateLocation(Locations loc, String table) {
         String isInHistory = "0";
         String isInFavorites = "0";
@@ -325,6 +390,13 @@ public class DBConfig {
         }
     }
 
+    /**
+     * Description: Checks if a location exist in the database
+     * @param loc   Locations object to be found
+     * @param table Table storing items to be found
+     * @return      True if the location was found in the database.
+     *              Otherwise, returns false
+     */
     public boolean chekIfLocationExist(Locations loc, String table)
     {
         try
@@ -350,6 +422,13 @@ public class DBConfig {
         return false;
     }
 
+    /**
+     * Description:   Clear a location by index
+     * @param loc     Locations object to be cleared
+     * @param table   Table storing the items to be cleared
+     * @param atIndex Index to be cleared
+     * @see           Locations class
+     */
     public void clearLocationAtIndex (Locations loc, String table, int atIndex)
     {
         try
@@ -365,6 +444,13 @@ public class DBConfig {
 
     }
 
+    /**
+     * Description: Gets a location by index
+     * @param index Index to get the location
+     * @param table Table where location is stored
+     * @return      Locations object found at the given index
+     * @see         Locations class
+     */
     public Locations getLocationByIndex (int index, String table)
     {
         Locations loc = new Locations (this);
@@ -400,6 +486,12 @@ public class DBConfig {
         return loc;
     }
 
+    /**
+     * Description: Gets all locations in a given table
+     * @param table Table to look for locations
+     * @return      An arrayList of Locations objects found
+     * @see         Locations class
+     */
     public ArrayList <Locations> getAllLocations (String table)
     {
         ArrayList <Locations> locations = new ArrayList<>();
@@ -419,14 +511,21 @@ public class DBConfig {
         return locations;
     }
 
+    /**
+     * Description: Deletes all items from a given table
+     * @param table Table where items to be deleted are stored
+     */
     public void deleteAllItems (String table)
     {
         db.execSQL("delete from "+ table);
     }
 
+    /**
+     * Description: Closes database instance
+     */
     public void closeDb ()
     {
         db.close();
     }
-}
+} // ends DBConfig class
 

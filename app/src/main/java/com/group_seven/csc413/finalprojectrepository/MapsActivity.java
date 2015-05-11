@@ -1,5 +1,4 @@
 package com.group_seven.csc413.finalprojectrepository;
-
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
@@ -21,7 +20,6 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapLongClickListener;
@@ -34,12 +32,10 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -112,23 +108,22 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         myLocation = new Locations(db);
         myHistory = new History(db);
         myFavorites = new Favorites(db);
+        favoriteLocations = new ArrayList<>();
         endNavigation = (Button) findViewById(R.id.endNavigation);
         drivingNav = (Button) findViewById(R.id.drive_nav);
         walkingNav = (Button) findViewById(R.id.walking_nav);
         endNavigation.setOnClickListener(this);
         drivingNav.setOnClickListener(this);
         walkingNav.setOnClickListener(this);
-
-
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
              Remember to comment it again, after the database is rebuilt.
          */
-
         //db.reBuildDatabase(this, "appDatabase.db");
         setUpMapIfNeeded(); // setUpMapIfNeeded must be called after db is being loaded/created
         loadParkingInfo();
+
 
     }
 
@@ -307,9 +302,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
         return true;
     }
-
-
-
     public void drawParkedCar(LatLng drawLocation) {
 
         String address = getStreetName(drawLocation);
@@ -373,14 +365,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 return true;
             case R.id.save_button:
                 Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
-
-                /*  <Locations> locs = myFavorites.getAllFavorites();
-                for (Locations l: locs)
-                {
-                    Log.d("ListFav", l.toString());
-                }*/
                 myHistory.saveLocationInHistory(loc);
-
                 if( myFavorites.addLocationToFavorites(loc))
                     Toast.makeText(getApplicationContext(), "Saved to Favorites", Toast.LENGTH_SHORT).show();
                 else if(myFavorites.isFavoritesFull())
@@ -424,8 +409,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         historyIndex = value;
     }
 
-    void showFavorites(){
-        //getAllFavorites doesnt work :( Halp
+    void showFavorites()
+    {
+        // GetAllFavorites() method was working, but your favoriteLocations variable
+        // wasn't being initialized in on create. I initialized it on onCreate.
+        // Please initialize variables when creating a new one!!!!!
         favoriteLocations = myFavorites.getAllFavorites();
         String[] myStreetNames = new String[favoriteLocations.size()];
         favoriteLocations.get(0).getStreet();
@@ -433,17 +421,17 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         for (int i = 0; i < favoriteLocations.size(); i++) {
             myStreetNames[i] = favoriteLocations.get(i).getStreet();
         }
-
-
-
         DialogFragment favorites = FavoritesOverlay.newInstance(myStreetNames);
         favorites.show(getFragmentManager(), "favorites");
 
 
     }
 
-
-    void drawPin(LatLng latLng){
+    // This methods is crashing the application when Favorites or History
+    // is cleared. Please, put a try catch or checks for empty favorites
+    // and history
+    void drawPin(LatLng latLng)
+    {
         if(pinExists && !mPin.equals(currentParkedMarker))
             mPin.remove();
         pinExists = true;
