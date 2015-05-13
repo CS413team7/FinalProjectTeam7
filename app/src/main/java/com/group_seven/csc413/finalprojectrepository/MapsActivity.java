@@ -527,7 +527,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         if (myHistory.getNumberOfFavoritesInHistory() == 0)
         {
             // Checks for empty array
-            myStreetNames = new  String[]{"Favorites is Empty"};
+            //myStreetNames = new  String[]{"Favorites is Empty"};
+            Toast.makeText(getApplicationContext(), "No Favorites", Toast.LENGTH_SHORT).show();
 
         }
         else
@@ -538,11 +539,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             for (int i = 0; i < favoriteLocations.size(); i++) {
                 myStreetNames[i] = favoriteLocations.get(i).getStreet();
             }
+            DialogFragment favorites = FavoritesOverlay.newInstance(myStreetNames);
+            favorites.show(getFragmentManager(), "favorites");
 
         }
 
-        DialogFragment favorites = FavoritesOverlay.newInstance(myStreetNames);
-        favorites.show(getFragmentManager(), "favorites");
+
 
 
     }
@@ -567,6 +569,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         int size = selectedItems.size();
         //Log.v("favorites length" , Integer.toString(size) );
         if (size == 0) return;
+        if (myHistory.getNumberOfFavoritesInHistory() == 0) return;
 
         ArrayList<Locations> tempLocations = myFavorites.getAllFavorites();
         Log.v("favorites length" , Integer.toString(tempLocations.size()) );
