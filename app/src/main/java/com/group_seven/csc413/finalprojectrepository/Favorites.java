@@ -17,6 +17,7 @@ import android.util.Log;
 public class Favorites extends History
 {
 
+
     private final int MAX_LOCATIONS_IN_FAVORITES = 10;
     private DBConfig db; // database instance
 
