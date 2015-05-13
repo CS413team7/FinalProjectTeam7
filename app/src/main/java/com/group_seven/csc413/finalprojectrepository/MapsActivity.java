@@ -2,6 +2,7 @@ package com.group_seven.csc413.finalprojectrepository;
 import android.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Criteria;
@@ -17,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import android.os.SystemClock;
 
 
 public class MapsActivity extends ActionBarActivity implements OnMapLongClickListener, OnMarkerClickListener, View.OnClickListener {
@@ -74,6 +77,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     private Button walkingNav;
     private GoogleDirection gd;
     private ArrayList<Marker> favoritePinArray = new ArrayList<Marker>();
+    private Chronometer chronometer;
+    private SharedPreferences sp;
 
     private Menu myMenu;
 
@@ -123,6 +128,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         endNavigation.setOnClickListener(this);
         drivingNav.setOnClickListener(this);
         walkingNav.setOnClickListener(this);
+        sp = this.getSharedPreferences(
+                "com.sp.app", Context.MODE_PRIVATE);
+
+        chronometer = (Chronometer) findViewById(R.id.chronometer);
+
+
         /*
              Uncomment to delete database and rebuild the database at runtime
              Warning: All the data stored before of the rebuild will be lost
@@ -676,6 +687,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         invalidateOptionsMenu();
         drawParkedCar(parkedLocation);
         overlay.setVisibility(View.VISIBLE);
+        startChronometer();
     }
 
     /**
@@ -752,6 +764,23 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     }
 
     /**
+     * Start the chronometer
+     */
+    public void startChronometer ()
+    {
+        chronometer.setBase(SystemClock.elapsedRealtime());
+        chronometer.start();
+    }
+
+    /**
+     * Stop the chronometer
+     */
+    public void stopChronometer()
+    {
+        chronometer.stop();
+    }
+
+    /**
      * Clears the users parked location
      */
     void clearParkedLocation()
@@ -770,6 +799,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         timeParked = null;
         overlay.setVisibility(View.GONE);
         currentParkedMarker.remove();
+        stopChronometer();
         //navigate(myLocation.getCoordinates(), "driving");
 
         //This method should clear the current parked location in database and any current parked variables

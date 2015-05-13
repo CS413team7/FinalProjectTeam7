@@ -58,7 +58,7 @@ android:name="com.google.android.gms.maps.SupportMapFragment" />
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Time Since Parked: ???"
+            android:text="Time Since Parked"
             android:id="@+id/textView2"
             android:layout_below="@+id/textView"
             android:layout_centerHorizontal="true"
@@ -82,6 +82,20 @@ android:name="com.google.android.gms.maps.SupportMapFragment" />
             android:layout_alignTop="@+id/drive_nav"
             android:layout_alignRight="@+id/textView"
             android:layout_alignEnd="@+id/textView" />
+        <Chronometer
+            android:id="@+id/chronometer"
+            android:format="%s"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="40sp"
+            android:textColor="#ffffff"
+            android:layout_below="@+id/textView2"
+            android:layout_toRightOf="@+id/drive_nav"
+            android:layout_toStartOf="@+id/walking_nav"
+            android:layout_toLeftOf="@+id/walking_nav"
+            android:layout_alignRight="@+id/textView2"
+            android:layout_alignEnd="@+id/textView2" />
+
 
     </RelativeLayout>
 
