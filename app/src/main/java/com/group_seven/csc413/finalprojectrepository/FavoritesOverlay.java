@@ -43,6 +43,11 @@ public class FavoritesOverlay extends DialogFragment implements DialogInterface.
         callingActivity = (MapsActivity) getActivity();
     }
 
+    /**
+     * Populates favorites to choose from
+     * @param savedInstanceState
+     * @return dialog to present to user
+     */
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         mSelectedItems = new ArrayList();

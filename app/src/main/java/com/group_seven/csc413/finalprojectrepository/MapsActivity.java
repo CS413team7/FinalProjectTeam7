@@ -499,8 +499,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         DialogFragment history = HistoryOverlay.newInstance(myStreetNames);
         history.show(getFragmentManager(), "history");
 
-        //if (!myHistory.isHistoryEmpty())
-        //drawPin(historyLocations.get(historyIndex).getCoordinates());
+        if (!myHistory.isHistoryEmpty())
+        drawPin(historyLocations.get(historyIndex).getCoordinates());
 
     }
 
