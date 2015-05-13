@@ -73,6 +73,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     private Button drivingNav;
     private Button walkingNav;
     private GoogleDirection gd;
+    private ArrayList<Marker> favoritePinArray = new ArrayList<Marker>();
 
     private Menu myMenu;
 
@@ -82,19 +83,26 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     String urlOff = "http://api.sfpark.org/sfpark/rest/availabilityservice?radius=5.0&response=json&pricing=yes&version=1.0&type=off";
 
 
-
-    //Enum for easily marking price overlays
+    /**
+     * This Enum is for selecting which type of overlay to draw
+     */
     public enum OverlayType {
         PRICE, AVILABILITY
     }
 
-    //Enum for showing weight of drawn path
+    /**
+     * This is for drawing the weight of the line for the street parking
+     */
     public enum OverlayWeight {
         HIGH,MEDIUM,LOW
     }
 
 
-
+    /**
+     * This method sets up all variables for the app. It connects to the database to check to see if there are favorites, or history.
+     * Uncomment reBuildDatabase if running previous version. Only use for development purposes.
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -127,6 +135,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     }
 
+    /**
+     * This method is a listener to check which buttons are being clicked. The buttons appear on the bottom overlay panels, and are
+     * separate from the action bar items located at the top of the app.
+     * @param v which view to listen for.
+     */
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -146,7 +159,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     }
 
 
-
+    /**
+     * Sets up map again if needed, after coming back grom being in the background.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -203,6 +218,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         }
     }
 
+    /**
+     * This method will animate the camera to a desired location.
+     * @param thisLocation location to animate to
+     */
     void animateCamera(LatLng thisLocation){
         cameraPosition = new CameraPosition.Builder()
                 .target(thisLocation)
@@ -211,6 +230,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
     }
 
+    /**
+     * This location returns the users current location. If there is a saved location, it will return that, if not, it will
+     * return the users current gps coordinates.
+     * @return the users gps location.
+     */
     LatLng getCurrentLocation() {
         Location myLocation = mMap.getMyLocation();
 
@@ -231,6 +255,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             return (new LatLng(myLocation.getLatitude(), myLocation.getLongitude()));
     }
 
+
+    /**
+     * This method simply ensures the user cant set more than 1 extra pin at a time.
+     * @param latLng Location being long-clicked
+     */
     @Override
     public void onMapLongClick(LatLng latLng) {
         drawPin(latLng);
@@ -271,6 +300,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         t.setText(x);*/
     }
 
+
+    /**
+     * This method is for switching the display of the action bar buttons so that the user can either save, or remove pin from map
+     * @param marker marker being clicked
+     * @return the marker the user wants more information about
+     */
     @Override
     public boolean onMarkerClick(Marker marker) {
         mPin = marker;
@@ -302,6 +337,12 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
         return true;
     }
+
+
+    /**
+     * This method draws an indicator for where the user's parked car is.
+     * @param drawLocation location to draw indicator
+     */
     public void drawParkedCar(LatLng drawLocation) {
 
         String address = getStreetName(drawLocation);
@@ -314,6 +355,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         currentParkedMarker.showInfoWindow();
     }
 
+    /**
+     * Sets up the Action Bar and listeners for the action bar.
+     * @param menu menu to be created
+     * @return true if menu was sucessfully set up
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         this.myMenu = menu;
@@ -336,6 +382,13 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         return true;
     }
 
+
+    /**
+     * This is an action bar listener. It has a switch statement to call different functions depending on which
+     * action bar item was called
+     * @param item This is the item clicked
+     * @return true if successful
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle presses on the action bar items
@@ -371,6 +424,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         }
     }
 
+    /**
+     * This method clears favorites in the database
+     */
     void clearFavorites ()
     {
         myFavorites.clearFavorites();
@@ -394,6 +450,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         else if(myFavorites.isLocationInFavorites(loc))
             Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();
     }
+
+    /**
+     * This method prepares the dialog fragment to display all favorites from the database
+     */
     void showHistory(){
 
         historyLocations = myHistory.getAllLocationsFromHistory();
@@ -426,10 +486,20 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     }
 
+    /**
+     * This method is for the dialog fragment to update which pin the user would like to see out of the list of history.
+     * It is only called from History Overlay.
+     * @param value index in the array of history locations to show
+     */
     void onHistorySelectValue(int value){
         historyIndex = value;
     }
 
+    /**
+     * Displays favorites on Favorites overlay. The result is then processed, and the pins checked are printed.
+     * Pins are cleared every time this method is called to ensure no overlaps, and so that when a pin is unchecked, it will
+     * only print pins that were checked.
+     */
     void showFavorites()
     {
 
@@ -458,12 +528,18 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     }
 
+    /**
+     * Clears the array of favorite pins
+     */
     void clearFavoritePins(){
         favoritePinArray.clear();
     }
 
-    ArrayList<Marker> favoritePinArray = new ArrayList<Marker>();
 
+    /**
+     * For use by the Favorites overlay. Updates the array of indexes to print favorite locations.
+     * @param selectedItems Array of indexes the user wants to print
+     */
     void updateFavoriteArray(ArrayList<Integer> selectedItems){
         for(Marker markerToDelete : favoritePinArray){
             markerToDelete.remove();
@@ -517,7 +593,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         */
     }
 
-
+    /**
+     * Draws an array of pins for showing history
+     * @param favoritesToPrint array of locations to print
+     */
     void drawHistoryPins(ArrayList<Locations> favoritesToPrint)
     {
         int i =0;
@@ -548,14 +627,17 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     }
 
 
-
-
+    /**
+     * clears all history in the database
+     */
     void clearAllHistory(){
         myHistory.clearHistory();
     }
 
 
-
+    /**
+     * Checks if favorites are full, then can add one to table
+     */
     void myFavorites(){
 
         boolean a = myFavorites.isFavoritesFull();
@@ -571,7 +653,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     }
 
-
+    /**
+     * removes a single marker from map
+     */
     void markerRemove(){
         if(!mPin.equals(currentParkedMarker)) {
             mPin.remove();
@@ -579,6 +663,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         }
     }
 
+    /**
+     * Upon parking, this method is called
+     */
     public void park(){
         isParked = true;
         parkedLocation = getCurrentLocation();
@@ -596,7 +683,6 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
      * The Layer type decides which type of overlay will be displayed, for example, price, or parking availability.
      * layer weight will select a color based on a low to high selector.
      */
-
     void drawOverlays(LatLng start, LatLng stop, OverlayType layerType, OverlayWeight layerWeight ){
         int drawColor;
         int drawWidth;
@@ -627,12 +713,17 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         Polyline polyline = mMap.addPolyline(rectOptions);
     }
 
+    /**
+     * displays the about view for the app
+     */
     public void showAbout(){
         Intent i = new Intent(this, About.class);
         startActivity(i);
     }
 
-    //THESE METHODS ARE FOR DATABASE STUFF!!!!!!!!!
+    /**
+     * Saves users current parked location in history, and current parked location
+     */
     void saveParkedLocation()
     {
         // Parking car table incrementing was disabled so we don't need the
@@ -645,6 +736,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     }
 
+    /**
+     * Loads users parked location
+     * @return the users Location
+     */
     LatLng loadParkedLocation(){
         // May change, depending in how is being called (sure LOC is not null or otherwise)
         // returns the last parking location.
@@ -656,13 +751,17 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         //return null;
     }
 
-    //ERASE LAST PARKED LOCATION FROM DATABASE
+    /**
+     * Clears the users parked location
+     */
     void clearParkedLocation()
     {
         myLocation.clearFromDb();
     }
 
-
+    /**
+     * This is called when the user hits unpark. Resets parked location, and returns to unparked mode.
+     */
     void unPark(){
         parkedLocation = null;
         isParked = false;
@@ -676,6 +775,11 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         //This method should clear the current parked location in database and any current parked variables
     }
 
+    /**
+     * This shows the user how to get to a certain point on the map
+     * @param end the coordinates to navigate to
+     * @param navigationType walking or driving
+     */
     void navigate(LatLng end, String navigationType){
         isNavigating = true;
         navigationOverlay.setVisibility(View.VISIBLE);
@@ -702,6 +806,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     }
 
+    /**
+     * Ends navigation view
+     */
     void clearNavigation(){
         isNavigating = false;
         navigationOverlay.setVisibility(View.GONE);
@@ -709,8 +816,9 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     }
 
 
-
-
+    /**
+     * Loads sfPark data
+     */
     void loadParkingInfo(){
         String tempCoordinates;
         String[] coordinates;
@@ -789,11 +897,10 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     }
 
     /**
-     *
-     * @param lat
-     * @return
+     * Gets a string whith the user friendly text for displaying
+     * @param lat coordinates of location
+     * @return string version of the location
      */
-
     String getStreetName(LatLng lat) {
         Geocoder geocoder = new Geocoder(getApplicationContext(), Locale.getDefault());
         String result = "";
