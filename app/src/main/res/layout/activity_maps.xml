@@ -20,7 +20,7 @@ android:name="com.google.android.gms.maps.SupportMapFragment" />
         android:layout_alignParentRight="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:background="#000000">
+        android:background="#078095">
 
         <Button
             android:layout_width="wrap_content"
@@ -29,6 +29,17 @@ android:name="com.google.android.gms.maps.SupportMapFragment" />
             android:id="@+id/endNavigation"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text=""
+            android:id="@+id/eta"
+            android:layout_centerHorizontal="true"
+            android:textColor="#ffffff"
+            android:textSize="40dp"
+            android:textStyle="bold" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -40,7 +51,7 @@ android:name="com.google.android.gms.maps.SupportMapFragment" />
         android:layout_alignParentRight="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        android:background="#000000">
+        android:background="#078095">
 
         <TextView
             android:layout_width="wrap_content"

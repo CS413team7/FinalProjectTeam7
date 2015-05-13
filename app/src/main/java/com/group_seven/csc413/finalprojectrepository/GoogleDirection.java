@@ -90,10 +90,21 @@ public class GoogleDirection {
 
     private Context mContext = null;
 
+    /**
+     * Loads context
+     * @param context
+     */
     public GoogleDirection(Context context) {
         mContext = context;
     }
 
+    /**
+     * Makes request to google maps api
+     * @param start start coordinate
+     * @param end end coordinate
+     * @param mode what type of travel
+     * @return returns xml response
+     */
     public String request(LatLng start, LatLng end, String mode) {
         final String url = "http://maps.googleapis.com/maps/api/directions/xml?"
                 + "origin=" + start.latitude + "," + start.longitude
@@ -106,6 +117,10 @@ public class GoogleDirection {
         return url;
     }
 
+
+    /**
+     * Builds document for http request
+     */
     private class RequestTask extends AsyncTask<String, Void, Document> {
         protected Document doInBackground(String... url) {
             try {
@@ -142,10 +157,20 @@ public class GoogleDirection {
         }
     }
 
+    /**
+     * Turns on logging for GoogleDirection
+     * @param state log or don't log
+     */
     public void setLogging(boolean state) {
         isLogging = state;
     }
 
+
+    /**
+     * get response status
+     * @param doc document to check
+     * @return document's response code
+     */
     public String getStatus(Document doc) {
         NodeList nl1 = doc.getElementsByTagName("status");
         Node node1 = nl1.item(0);
@@ -154,6 +179,12 @@ public class GoogleDirection {
         return node1.getTextContent();
     }
 
+
+    /**
+     * Get an array of durations
+     * @param doc doc to parse
+     * @return array of durations
+     */
     public String[] getDurationText(Document doc) {
         NodeList nl1 = doc.getElementsByTagName("duration");
         String[] arr_str = new String[nl1.getLength() - 1];
@@ -168,6 +199,11 @@ public class GoogleDirection {
         return arr_str;
     }
 
+    /**
+     * get an array of duration values in seconds
+     * @param doc document to parse
+     * @return durations of each leg of the trip
+     */
     public int[] getDurationValue(Document doc) {
         NodeList nl1 = doc.getElementsByTagName("duration");
         int[] arr_int = new int[nl1.getLength() - 1];
@@ -182,6 +218,12 @@ public class GoogleDirection {
         return arr_int;
     }
 
+
+    /**
+     * Gets single string with total duration
+     * @param doc document to parse
+     * @return single string with duration
+     */
     public String getTotalDurationText(Document doc) {
         NodeList nl1 = doc.getElementsByTagName("duration");
         Node node1 = nl1.item(nl1.getLength() - 1);
@@ -192,6 +234,12 @@ public class GoogleDirection {
         return node2.getTextContent();
     }
 
+
+    /**
+     * returns total duration as sec
+     * @param doc doc to parse
+     * @return duration in seconds
+     */
     public int getTotalDurationValue(Document doc) {
         NodeList nl1 = doc.getElementsByTagName("duration");
         Node node1 = nl1.item(nl1.getLength() - 1);
@@ -202,6 +250,12 @@ public class GoogleDirection {
         return Integer.parseInt(node2.getTextContent());
     }
 
+
+    /**
+     * gets distance information as text
+     * @param doc doc to parse
+     * @return array of distances in text format
+     */
     public String[] getDistanceText(Document doc) {
         NodeList nl1 = doc.getElementsByTagName("distance");
         String[] arr_str = new String[nl1.getLength() - 1];
@@ -215,6 +269,8 @@ public class GoogleDirection {
         }
         return arr_str;
     }
+
+
 
     public int[] getDistanceValue(Document doc) {
         NodeList nl1 = doc.getElementsByTagName("distance");

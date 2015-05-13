@@ -65,7 +65,12 @@ public class FavoritesOverlay extends DialogFragment implements DialogInterface.
                                 }
                             }
                         })
-                .setPositiveButton("Clear All", new DialogInterface.OnClickListener() {
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        callingActivity.updateFavoriteArray(mSelectedItems);
+                    }
+                })
+                .setNeutralButton("Clear All", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         callingActivity.clearFavorites();
                     }

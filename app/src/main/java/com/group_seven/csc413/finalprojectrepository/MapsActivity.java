@@ -79,6 +79,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
     private ArrayList<Marker> favoritePinArray = new ArrayList<Marker>();
     private Chronometer chronometer;
     private SharedPreferences sp;
+    private TextView eta;
 
     private Menu myMenu;
 
@@ -127,6 +128,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         walkingNav = (Button) findViewById(R.id.walking_nav);
         endNavigation.setOnClickListener(this);
         drivingNav.setOnClickListener(this);
+        eta = (TextView) findViewById(R.id.eta);
         walkingNav.setOnClickListener(this);
         sp = this.getSharedPreferences(
                 "com.sp.app", Context.MODE_PRIVATE);
@@ -159,11 +161,16 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
                 break;
             }
             case  R.id.drive_nav: {
+                navigate(loadParkedLocation(), "driving");
                 unPark();
+
                 break;
             }
             case  R.id.walking_nav: {
+                navigate(loadParkedLocation(), "walking");
                 unPark();
+
+
                 break;
             }
         }
@@ -818,7 +825,8 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         gd.setOnDirectionResponseListener(new GoogleDirection.OnDirectionResponseListener() {
             public void onResponse(String status, Document doc, GoogleDirection gd) {
                 //Toast.makeText(getApplicationContext(), status, Toast.LENGTH_SHORT).show();
-
+                int estimatedTime = gd.getTotalDurationValue(doc);
+                eta.setText("ETA : " + estimatedTime/60 + " Minutes , " + gd.getTotalDistanceText(doc));
                 gd.animateDirection(mMap, gd.getDirection(doc), GoogleDirection.SPEED_NORMAL
                         , true, true, true, false, null, false, true, new PolylineOptions().width(7));
             }
@@ -827,7 +835,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         if(navigationType.equals("driving")){
             gd.request(start, end, GoogleDirection.MODE_DRIVING);
         }else{
-            gd.request(start, end, GoogleDirection.MODE_BICYCLING);
+            gd.request(start, end, GoogleDirection.MODE_WALKING);
         }
 
 
