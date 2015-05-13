@@ -381,6 +381,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
      */
     void saveLocationToFavorites ()
     {
+
         Locations loc = new Locations(db, currentLocation, getStreetName(currentLocation));
         if (!myHistory.isLocationInHistory(loc))
         {
@@ -394,21 +395,26 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
             Toast.makeText(getApplicationContext(), "Already Saved", Toast.LENGTH_SHORT).show();
     }
     void showHistory(){
+
         historyLocations = myHistory.getAllLocationsFromHistory();
         String[] myStreetNames;
-
         if (myHistory.isHistoryEmpty() == true)
         {
             myStreetNames = new  String[]{"History is Empty"};
 
+
         }
         else
-            {
+        {
+
+
                 myStreetNames = new String[historyLocations.size()];
                 historyLocations.get(0).getStreet();
-                for (int i = 0; i < historyLocations.size(); i++) {
-                myStreetNames[i] = historyLocations.get(i).getStreet();
-            }
+                for (int i = 0; i < historyLocations.size(); i++)
+                {
+                     myStreetNames[i] = historyLocations.get(i).getStreet();
+
+                }
         }
 
 
@@ -426,9 +432,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     void showFavorites()
     {
-        // GetAllFavorites() method was working, but your favoriteLocations variable
-        // wasn't being initialized in on create. I initialized it on onCreate.
-        // Please initialize variables when creating a new one!!!!!
+
         favoriteLocations = myFavorites.getAllFavorites();
         String [] myStreetNames;
         if (myHistory.getNumberOfFavoritesInHistory() == 0)
@@ -454,9 +458,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
 
     }
 
-    // This methods is crashing the application when Favorites or History
-    // is cleared. Please, put a try catch or checks for empty favorites
-    // and history
+
     void drawPin(LatLng latLng)
     {
         if(pinExists && !mPin.equals(currentParkedMarker))
@@ -558,6 +560,7 @@ public class MapsActivity extends ActionBarActivity implements OnMapLongClickLis
         // Parking car table incrementing was disabled so we don't need the
         // update method for the main table anymore
         myLocation.saveInDb();
+        Log.d("Parked", myLocation.toString());
         myHistory.saveLocationInHistory(myLocation);
 
 

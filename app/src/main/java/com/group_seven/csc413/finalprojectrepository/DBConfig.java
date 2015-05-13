@@ -523,7 +523,16 @@ public class DBConfig {
      */
     public void deleteAllItems (String table)
     {
-        db.execSQL("delete from "+ table);
+        db.execSQL("DROP TABLE " + table);
+        // History
+        db.execSQL("CREATE TABLE IF NOT EXISTS " +
+                table +
+                " ( id integer primary key autoincrement, " +
+                CONTEXT_COLUMN + " Text, " +
+                TIME_COLUMN + " Text, " +
+                LATITUDE_COLUMN + " Real, " +
+                LONGITUDE_COLUMN + " Real, " +
+                IS_IN_FAVORITES + " Text );");
     }
 
     /**
