@@ -9,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.app.Activity;
 import android.location.Location;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
@@ -42,12 +41,10 @@ public class SplashScreen extends Activity {
         ((Global) this.getApplication()).setDatabaseContext(DBConfig.loadDbConfiguration(this));
 
 
-
-        //adding wifi manager so that it may be changed within the app if wifi is off
-       // WifiManager wifi;
-        //wifi=(WifiManager)getSystemService(Context.WIFI_SERVICE);
-
-
+   /*Creates an alert message if the GPS setting is off. Provides an option to either turn it on
+     or cancel. If the option to turn it in is selected, the app brings you to the GPS service of
+     your phone where you can turn it on.
+     */
        if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
            Toast.makeText(this, "GPS is On", Toast.LENGTH_SHORT).show();
        }else{
@@ -73,7 +70,10 @@ public class SplashScreen extends Activity {
 
                }
 
-
+   /*Creates an alert message if the WIFI is off and there is no available connection.
+     Provides an option to either turn it on  or cancel. If the option to turn it in is selected,
+     the app brings you to the WIFI service of your phone where you can turn it on.
+     */
         if(con_manager.getActiveNetworkInfo() != null &&
                 con_manager.getActiveNetworkInfo().isAvailable() &&
                 con_manager.getActiveNetworkInfo().isConnected()){
@@ -100,8 +100,9 @@ public class SplashScreen extends Activity {
             alert.show();
         }
 
-
-
+/*
+Holds the app screen for 5 seconds, after 5 seconds has passed. it calls to MapsActivity class
+ */
         Thread startTimer = new Thread(){
             public void run(){
                 try {
